@@ -9,6 +9,8 @@ interface HistogramProps {
 const MARGIN = { top: 20, right: 20, bottom: 80, left: 60 };
 const WIDTH = 600;
 const HEIGHT = 350;
+const GRID_COLOR = '#e2e8f0';
+const AXIS_COLOR = '#64748b';
 
 export default function Histogram({ data }: HistogramProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -22,10 +24,20 @@ export default function Histogram({ data }: HistogramProps) {
     const innerWidth = WIDTH - MARGIN.left - MARGIN.right;
     const innerHeight = HEIGHT - MARGIN.top - MARGIN.bottom;
 
-    const g = svg
+    const gradient = svg
       .attr('viewBox', `0 0 ${WIDTH} ${HEIGHT}`)
-      .append('g')
-      .attr('transform', `translate(${MARGIN.left},${MARGIN.top})`);
+      .append('defs')
+      .append('linearGradient')
+      .attr('id', 'mw-gradient')
+      .attr('x1', '0%')
+      .attr('x2', '0%')
+      .attr('y1', '0%')
+      .attr('y2', '100%');
+
+    gradient.append('stop').attr('offset', '0%').attr('stop-color', '#34d399');
+    gradient.append('stop').attr('offset', '100%').attr('stop-color', '#10b981');
+
+    const g = svg.append('g').attr('transform', `translate(${MARGIN.left},${MARGIN.top})`);
 
     const xScale = d3
       .scaleBand()
@@ -39,19 +51,28 @@ export default function Histogram({ data }: HistogramProps) {
       .nice()
       .range([innerHeight, 0]);
 
-    // X axis
+    g.append('g')
+      .call(d3.axisLeft(yScale).tickSize(-innerWidth).tickFormat(() => ''))
+      .call((selection) => selection.select('.domain').remove())
+      .call((selection) =>
+        selection.selectAll('line').attr('stroke', GRID_COLOR).attr('stroke-dasharray', '4 5')
+      );
+
     g.append('g')
       .attr('transform', `translate(0,${innerHeight})`)
       .call(d3.axisBottom(xScale))
+      .call((selection) => selection.selectAll('path,line').attr('stroke', AXIS_COLOR))
       .selectAll('text')
       .attr('transform', 'rotate(-35)')
       .style('text-anchor', 'end')
+      .attr('fill', '#334155')
       .style('font-size', '10px');
 
-    // Y axis
-    g.append('g').call(d3.axisLeft(yScale));
+    g.append('g')
+      .call(d3.axisLeft(yScale))
+      .call((selection) => selection.selectAll('path,line').attr('stroke', AXIS_COLOR))
+      .call((selection) => selection.selectAll('text').attr('fill', '#334155').style('font-size', '11px'));
 
-    // Bars — green to distinguish from the blue BarChart
     g.selectAll('rect')
       .data(data)
       .join('rect')
@@ -59,33 +80,34 @@ export default function Histogram({ data }: HistogramProps) {
       .attr('y', (d) => yScale(d.count))
       .attr('width', xScale.bandwidth())
       .attr('height', (d) => innerHeight - yScale(d.count))
-      .attr('fill', '#10b981')
-      .attr('rx', 3)
+      .attr('fill', 'url(#mw-gradient)')
+      .attr('rx', 5)
       .style('cursor', 'pointer')
+      .style('filter', 'drop-shadow(0 10px 14px rgba(16, 185, 129, 0.18))')
       .on('mouseover', function () {
-        d3.select(this).attr('fill', '#059669');
+        d3.select(this).attr('opacity', 0.84);
       })
       .on('mouseout', function () {
-        d3.select(this).attr('fill', '#10b981');
+        d3.select(this).attr('opacity', 1);
       });
 
-    // Y axis label
     g.append('text')
       .attr('transform', 'rotate(-90)')
       .attr('x', -innerHeight / 2)
       .attr('y', -45)
-      .attr('fill', '#374151')
+      .attr('fill', '#334155')
       .attr('text-anchor', 'middle')
       .style('font-size', '12px')
+      .style('font-weight', '700')
       .text('Number of Compounds');
 
-    // X axis label
     g.append('text')
       .attr('x', innerWidth / 2)
       .attr('y', innerHeight + 55)
-      .attr('fill', '#374151')
+      .attr('fill', '#334155')
       .attr('text-anchor', 'middle')
       .style('font-size', '12px')
+      .style('font-weight', '700')
       .text('Molecular Weight Range (g/mol)');
   }, [data]);
 

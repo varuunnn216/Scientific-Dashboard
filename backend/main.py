@@ -1,14 +1,15 @@
 from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, text
 from typing import Optional, List
+import logging
 
 from database import engine, get_db, Base
 from models import Compound
 import schemas
 
-Base.metadata.create_all(bind=engine)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Scientific Compound Data API",
@@ -28,6 +29,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.on_event("startup")
+def validate_database_connection():
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+        Base.metadata.create_all(bind=engine)
+    except Exception as exc:
+        logger.warning("Database is unreachable; API started without validating tables: %s", exc)
 
 
 @app.get("/")

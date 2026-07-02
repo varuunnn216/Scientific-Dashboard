@@ -7,7 +7,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
 }
 
-const variantStyles: Record<string, React.CSSProperties> = {
+const variantStyles: Record<NonNullable<ButtonProps['variant']>, React.CSSProperties> = {
   primary: {
     background: '#2563eb',
     color: '#fff',
@@ -25,7 +25,7 @@ const variantStyles: Record<string, React.CSSProperties> = {
   },
 };
 
-const sizeStyles: Record<string, React.CSSProperties> = {
+const sizeStyles: Record<NonNullable<ButtonProps['size']>, React.CSSProperties> = {
   sm: { padding: '4px 10px', fontSize: 12, borderRadius: 4 },
   md: { padding: '8px 16px', fontSize: 14, borderRadius: 6 },
   lg: { padding: '12px 24px', fontSize: 16, borderRadius: 8 },
@@ -57,6 +57,8 @@ export default function Button({
     <button style={baseStyle} disabled={disabled || loading} {...rest}>
       {loading && (
         <span
+          aria-label="Loading"
+          role="status"
           style={{
             width: 14,
             height: 14,
