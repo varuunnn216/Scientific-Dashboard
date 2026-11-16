@@ -15,6 +15,8 @@ import SpotlightCard from './reactbits/SpotlightCard';
 import BlurText from './reactbits/BlurText';
 import AnimatedContent from './reactbits/AnimatedContent';
 import ShinyText from './reactbits/ShinyText';
+import ParticlesBg from './reactbits/ParticlesBg';
+import Magnet from './reactbits/Magnet';
 import styles from './Dashboard.module.css';
 
 const PAGE_SIZE = 25;
@@ -305,6 +307,7 @@ export default function Dashboard() {
 
   return (
     <main className={styles.shell}>
+      <ParticlesBg />
       <AnimatedContent delayMs={0}>
         <section className={styles.hero}>
           <div className={styles.heroCopy}>
@@ -341,9 +344,11 @@ export default function Dashboard() {
             <strong>Unable to load compound data</strong>
             <p>{error}</p>
           </div>
-          <button type="button" className={styles.retryButton} onClick={fetchData}>
-            Retry
-          </button>
+          <Magnet>
+            <button type="button" className={styles.retryButton} onClick={fetchData}>
+              Retry
+            </button>
+          </Magnet>
         </div>
       )}
 
