@@ -16,10 +16,10 @@
   align-items: center;
   gap: 6px;
   padding: 4px 10px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid #27272a;
   border-radius: 999px;
-  background: #ffffff;
-  color: #1e293b;
+  background: #18181b;
+  color: #f4f4f5;
   font-size: 12px;
   font-weight: 600;
   line-height: 1.2;
@@ -28,19 +28,19 @@
 }
 
 .legendItem:hover {
-  border-color: #94a3b8;
-  background: #f8fafc;
+  border-color: #52525b;
+  background: #27272a;
 }
 
 .legendItem:focus-visible {
-  outline: 2px solid #2563eb;
+  outline: 2px solid #fafafa;
   outline-offset: 2px;
 }
 
 .legendItemInactive {
-  opacity: 0.45;
+  opacity: 0.42;
   text-decoration: line-through;
-  background: #f1f5f9;
+  background: #09090b;
 }
 
 .legendSwatch {
@@ -48,31 +48,32 @@
   height: 10px;
   border-radius: 999px;
   flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
 .legendReset {
   padding: 4px 10px;
-  border: 1px dashed #94a3b8;
+  border: 1px dashed #52525b;
   border-radius: 999px;
   background: transparent;
-  color: #334155;
+  color: #d4d4d8;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
 }
 
 .legendReset:hover {
-  background: #f1f5f9;
+  background: #18181b;
 }
 
 .legendReset:focus-visible {
-  outline: 2px solid #2563eb;
+  outline: 2px solid #fafafa;
   outline-offset: 2px;
 }
 
 .chartCaption {
   margin: 8px 0 0;
-  color: #475569;
+  color: #a1a1aa;
   font-size: 12px;
   font-weight: 600;
 }
@@ -84,10 +85,10 @@
   justify-content: center;
   min-height: 240px;
   padding: 24px;
-  border: 1px dashed #cbd5e1;
+  border: 1px dashed #27272a;
   border-radius: 8px;
-  background: #f8fafc;
-  color: #475569;
+  background: #09090b;
+  color: #a1a1aa;
   text-align: center;
   font-size: 14px;
   font-weight: 500;

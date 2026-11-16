@@ -13,10 +13,11 @@ interface ScatterPlotProps {
 
 const MARGIN = { top: 18, right: 24, bottom: 48, left: 56 };
 const HEIGHT = 340;
-const GRID_COLOR = '#e2e8f0';
-const AXIS_COLOR = '#64748b';
+const GRID_COLOR = '#27272a';
+const AXIS_COLOR = '#52525b';
+const TEXT_COLOR = '#d4d4d8';
 
-const PALETTE = ['#2563eb', '#0d9488', '#ea580c', '#7c3aed', '#dc2626', '#65a30d', '#0284c7'];
+const PALETTE = ['#fafafa', '#d4d4d8', '#a1a1aa', '#71717a', '#e4e4e7', '#52525b', '#f4f4f5'];
 
 export default function ScatterPlot({
   data,
@@ -96,11 +97,11 @@ export default function ScatterPlot({
       .attr('transform', `translate(0,${innerHeight})`)
       .call(d3.axisBottom(xScale).ticks(tickCountX))
       .call((selection) => selection.selectAll('path,line').attr('stroke', AXIS_COLOR))
-      .call((selection) => selection.selectAll('text').attr('fill', '#334155').style('font-size', '11px'))
+      .call((selection) => selection.selectAll('text').attr('fill', TEXT_COLOR).style('font-size', '11px'))
       .append('text')
       .attr('x', innerWidth / 2)
       .attr('y', 38)
-      .attr('fill', '#334155')
+      .attr('fill', TEXT_COLOR)
       .attr('text-anchor', 'middle')
       .style('font-size', '12px')
       .style('font-weight', '700')
@@ -109,12 +110,12 @@ export default function ScatterPlot({
     g.append('g')
       .call(d3.axisLeft(yScale))
       .call((selection) => selection.selectAll('path,line').attr('stroke', AXIS_COLOR))
-      .call((selection) => selection.selectAll('text').attr('fill', '#334155').style('font-size', '11px'))
+      .call((selection) => selection.selectAll('text').attr('fill', TEXT_COLOR).style('font-size', '11px'))
       .append('text')
       .attr('transform', 'rotate(-90)')
       .attr('x', -innerHeight / 2)
       .attr('y', -42)
-      .attr('fill', '#334155')
+      .attr('fill', TEXT_COLOR)
       .attr('text-anchor', 'middle')
       .style('font-size', '12px')
       .style('font-weight', '700')
@@ -128,16 +129,16 @@ export default function ScatterPlot({
       .attr('class', 'd3-tooltip')
       .style('position', 'absolute')
       .style('z-index', '10')
-      .style('background', 'rgba(15, 23, 42, 0.95)')
-      .style('border', '1px solid rgba(255,255,255,0.18)')
+      .style('background', '#18181b')
+      .style('border', '1px solid #3f3f46')
       .style('border-radius', '8px')
-      .style('color', '#f8fafc')
+      .style('color', '#fafafa')
       .style('padding', '8px 10px')
       .style('font-size', '12px')
       .style('line-height', '1.45')
       .style('pointer-events', 'none')
       .style('opacity', 0)
-      .style('box-shadow', '0 18px 34px rgba(15,23,42,0.24)');
+      .style('box-shadow', '0 18px 34px rgba(0,0,0,0.55)');
 
     g.selectAll('circle')
       .data(visibleData, (d) => String((d as Compound).id))
@@ -146,8 +147,8 @@ export default function ScatterPlot({
       .attr('cy', (d) => yScale(d.toxicity_score))
       .attr('r', (d) => (d.id === selectedId ? 7 : 4.5))
       .attr('fill', (d) => colorScale(d.category))
-      .attr('stroke', (d) => (d.id === selectedId ? '#0f172a' : '#ffffff'))
-      .attr('stroke-width', (d) => (d.id === selectedId ? 2.5 : 1.5))
+      .attr('stroke', (d) => (d.id === selectedId ? '#ffffff' : '#09090b'))
+      .attr('stroke-width', (d) => (d.id === selectedId ? 2.5 : 1.2))
       .attr('opacity', 0.84)
       .style('cursor', 'pointer')
       .on('mouseover', function (_event, d) {

@@ -2,11 +2,11 @@
   display: inline-block;
   background: linear-gradient(
     120deg,
-    #0369a1 0%,
-    #0369a1 40%,
-    #38bdf8 50%,
-    #0369a1 60%,
-    #0369a1 100%
+    #a1a1aa 0%,
+    #a1a1aa 40%,
+    #ffffff 50%,
+    #a1a1aa 60%,
+    #a1a1aa 100%
   );
   background-size: 220% 100%;
   -webkit-background-clip: text;
@@ -27,7 +27,7 @@
 @media (prefers-reduced-motion: reduce) {
   .shiny {
     background: none;
-    color: #0369a1;
+    color: #e4e4e7;
     animation: none;
   }
 }

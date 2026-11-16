@@ -10,8 +10,9 @@ interface HistogramProps {
 
 const MARGIN = { top: 20, right: 20, bottom: 72, left: 56 };
 const HEIGHT = 320;
-const GRID_COLOR = '#e2e8f0';
-const AXIS_COLOR = '#64748b';
+const GRID_COLOR = '#27272a';
+const AXIS_COLOR = '#52525b';
+const TEXT_COLOR = '#d4d4d8';
 
 export default function Histogram({ data }: HistogramProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -40,8 +41,8 @@ export default function Histogram({ data }: HistogramProps) {
       .attr('y1', '0%')
       .attr('y2', '100%');
 
-    gradient.append('stop').attr('offset', '0%').attr('stop-color', '#34d399');
-    gradient.append('stop').attr('offset', '100%').attr('stop-color', '#10b981');
+    gradient.append('stop').attr('offset', '0%').attr('stop-color', '#e4e4e7');
+    gradient.append('stop').attr('offset', '100%').attr('stop-color', '#52525b');
 
     const g = svg.append('g').attr('transform', `translate(${MARGIN.left},${MARGIN.top})`);
 
@@ -71,13 +72,13 @@ export default function Histogram({ data }: HistogramProps) {
       .selectAll('text')
       .attr('transform', width < 480 ? 'rotate(-35)' : 'rotate(0)')
       .style('text-anchor', width < 480 ? 'end' : 'middle')
-      .attr('fill', '#334155')
+      .attr('fill', TEXT_COLOR)
       .style('font-size', width < 480 ? '10px' : '11px');
 
     g.append('g')
       .call(d3.axisLeft(yScale))
       .call((selection) => selection.selectAll('path,line').attr('stroke', AXIS_COLOR))
-      .call((selection) => selection.selectAll('text').attr('fill', '#334155').style('font-size', '11px'));
+      .call((selection) => selection.selectAll('text').attr('fill', TEXT_COLOR).style('font-size', '11px'));
 
     const tooltip = d3
       .select(containerRef.current)
@@ -87,16 +88,16 @@ export default function Histogram({ data }: HistogramProps) {
       .attr('class', 'd3-tooltip')
       .style('position', 'absolute')
       .style('z-index', '10')
-      .style('background', 'rgba(15, 23, 42, 0.95)')
-      .style('border', '1px solid rgba(255,255,255,0.18)')
+      .style('background', '#18181b')
+      .style('border', '1px solid #3f3f46')
       .style('border-radius', '8px')
-      .style('color', '#f8fafc')
+      .style('color', '#fafafa')
       .style('padding', '8px 10px')
       .style('font-size', '12px')
       .style('line-height', '1.45')
       .style('pointer-events', 'none')
       .style('opacity', 0)
-      .style('box-shadow', '0 18px 34px rgba(15,23,42,0.24)');
+      .style('box-shadow', '0 18px 34px rgba(0,0,0,0.55)');
 
     g.selectAll('rect')
       .data(data)
@@ -130,7 +131,7 @@ export default function Histogram({ data }: HistogramProps) {
       .attr('transform', 'rotate(-90)')
       .attr('x', -innerHeight / 2)
       .attr('y', -42)
-      .attr('fill', '#334155')
+      .attr('fill', TEXT_COLOR)
       .attr('text-anchor', 'middle')
       .style('font-size', '12px')
       .style('font-weight', '700')
@@ -139,7 +140,7 @@ export default function Histogram({ data }: HistogramProps) {
     g.append('text')
       .attr('x', innerWidth / 2)
       .attr('y', innerHeight + 52)
-      .attr('fill', '#334155')
+      .attr('fill', TEXT_COLOR)
       .attr('text-anchor', 'middle')
       .style('font-size', '12px')
       .style('font-weight', '700')

@@ -10,10 +10,10 @@ interface Particle {
 }
 
 const COLORS = [
-  'rgba(14, 165, 233, 0.42)',
-  'rgba(20, 184, 166, 0.38)',
-  'rgba(99, 102, 241, 0.32)',
-  'rgba(56, 189, 248, 0.4)',
+  'rgba(255, 255, 255, 0.34)',
+  'rgba(212, 212, 216, 0.26)',
+  'rgba(161, 161, 170, 0.22)',
+  'rgba(244, 244, 245, 0.28)',
 ];
 
 export default function ParticlesBg() {
@@ -96,7 +96,7 @@ export default function ParticlesBg() {
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(q.x, q.y);
-            ctx.strokeStyle = `rgba(14, 165, 233, ${0.14 * (1 - dist / 135)})`;
+            ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 * (1 - dist / 135)})`;
             ctx.lineWidth = 1;
             ctx.stroke();
           }
