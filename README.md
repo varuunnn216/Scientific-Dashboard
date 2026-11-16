@@ -1,307 +1,123 @@
 # Scientific Compound Data Explorer
 
-A full stack dashboard for exploring scientific compound data. The app lets users filter a compound library, inspect molecular properties, and view D3 visualizations for toxicity, molecular weight, and binding affinity trends.
+Interactive full-stack dashboard for filtering, analyzing, and visualizing synthetic scientific compound libraries with React, TypeScript, D3.js, FastAPI, and PostgreSQL.
+
+![Dashboard Preview](docs/dashboard-preview.png)
+
+**Live Demo:** [https://scientific-dashboard-ui.vercel.app/](https://scientific-dashboard-ui.vercel.app/)  
+**Live API:** [https://scientific-dashboard-api.vercel.app/](https://scientific-dashboard-api.vercel.app/)
 
 ![React](https://img.shields.io/badge/React-19-61dafb)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-local-4169e1)
-![D3](https://img.shields.io/badge/D3.js-charts-f9a03c)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-SQLAlchemy-4169e1)
+![D3](https://img.shields.io/badge/D3.js-7-f9a03c)
+![License: MIT](https://img.shields.io/badge/License-MIT-green)
 
 ## Overview
 
-This project demonstrates a practical scientific data workflow:
+The Scientific Compound Data Explorer lets users filter compounds by category, molecular weight range, and ID, inspect summary KPIs, explore three responsive D3 visualizations, sort and paginate through compound records, and export filtered results to CSV.
 
-1. Seed realistic fake compound records into PostgreSQL.
-2. Serve the data through a typed FastAPI REST API.
-3. Consume the API from a React + TypeScript frontend.
-4. Visualize compound trends with D3.js.
-5. Test and document the component and application behavior.
+> **Note:** The dataset is synthetic demo data generated with a fixed random seed (`seed_data.py`). It is not a real pharmaceutical or chemistry dataset.
 
-The dataset is local fake data generated with `Faker` and Python's `random` module. It is not a real pharmaceutical or chemistry dataset, but it is shaped to look like compound data for dashboard development and interview/demo purposes.
+## Architecture
+
+```mermaid
+flowchart LR
+    Browser["Browser (React 19 + TypeScript + D3.js)"]
+    API["FastAPI REST API"]
+    DB[("PostgreSQL (SQLAlchemy ORM)")]
+    Seed["seed_data.py (Synthetic Demo Data)"]
+
+    Browser -->|Axios + Env Config| API
+    API -->|SQL Queries| DB
+    Seed -->|Fixed-Seed Population| DB
+```
 
 ## Features
 
-- Modern React dashboard with responsive panels and metric cards.
-- Category and molecular weight filters.
-- Clickable compound table with selected-compound details.
-- D3 scatter plot: molecular weight vs toxicity score.
-- D3 bar chart: average binding affinity by category.
-- D3 histogram: molecular weight distribution.
-- FastAPI backend with paginated, filtered, sortable endpoints.
-- PostgreSQL persistence through SQLAlchemy.
-- Storybook stories for reusable UI/chart components.
-- Vitest + React Testing Library tests.
-- GitHub Actions CI workflow.
+- **Reactive KPI Summary**: Total compounds, active categories, average toxicity, and best binding affinity update dynamically with filters.
+- **Interactive D3 Visualizations**:
+  - **Molecular Weight vs Toxicity Scatter Plot**: Clickable category color legend, rich hover tooltips (ID, category, weight, toxicity, affinity), point selection, and `"Showing N of M compounds"` caption.
+  - **Avg Binding Affinity Bar Chart**: Sorted descending with value labels, exact mean & compound count tooltips.
+  - **Molecular Weight Distribution Histogram**: 100 g/mol buckets with compound count tooltips.
+  - All charts resize via `ResizeObserver` and display clear empty states when no records match.
+- **Sortable, Paginated Table**: Server/client-consistent sorting across all columns, 25 rows per page, ID search, category chips, `"Showing 1-25 of N"` indicator, and CSV export.
+- **Resilient UX**: Loading skeletons, 3-second cold-start notice, friendly error banner with Retry, debounced & validated weight filters (`min <= max`), and responsive layout down to `390px`.
 
 ## Tech Stack
 
 | Layer | Technologies |
 | --- | --- |
-| Frontend | React, TypeScript, Vite, Axios |
-| Visualization | D3.js |
-| Styling | CSS Modules, inline chart styling |
-| Backend | FastAPI, SQLAlchemy, Pydantic |
+| Frontend | React 19, TypeScript, Vite, Axios, CSS Modules |
+| Visualization | D3.js v7 |
+| Backend | FastAPI, SQLAlchemy, Pydantic, Uvicorn |
 | Database | PostgreSQL |
-| Data seeding | Faker, Python random |
-| Testing | Vitest, React Testing Library, jsdom |
-| Component docs | Storybook |
+| Testing | Vitest, React Testing Library, jsdom, Playwright |
+| Component Docs | Storybook |
 | CI | GitHub Actions |
-
-## Architecture
-
-```text
-Browser
-  |
-  | React + TypeScript + Vite
-  | - Dashboard UI
-  | - Filters and table
-  | - D3 charts
-  |
-  v
-Axios API client
-  |
-  v
-FastAPI backend
-  |
-  | SQLAlchemy ORM
-  v
-PostgreSQL database
-  |
-  ^
-  | seed_data.py generates 250 fake compounds
-```
-
-## Data Model
-
-Each compound record contains:
-
-- `id`
-- `name`
-- `molecular_formula`
-- `molecular_weight`
-- `solubility`
-- `toxicity_score`
-- `binding_affinity`
-- `category`
-- `created_at`
-
-The seed script creates 250 fake compounds across these categories:
-
-- Antiviral
-- Kinase Inhibitor
-- Antibiotic
-- Antifungal
-- Anticancer
-- Anti-inflammatory
-- CNS Agent
-
-## Project Structure
-
-```text
-scientific-dashboard-starter/
-  backend/
-    database.py          SQLAlchemy engine/session setup
-    main.py              FastAPI application and endpoints
-    models.py            SQLAlchemy Compound model
-    schemas.py           Pydantic request/response schemas
-    seed_data.py         Fake data generator
-    requirements.txt     Python dependencies
-    .env.example         Example backend environment variables
-
-  frontend/
-    src/
-      api/compounds.ts           Typed Axios API client
-      components/Dashboard.tsx   Main dashboard
-      components/*.tsx           Charts and UI components
-      components/*.test.tsx      Frontend tests
-      stories/*.stories.ts       Storybook stories
-      types.ts                   Shared frontend types
-    package.json
-    vite.config.ts
-    .env.example
-
-  .github/workflows/ci.yml
-  PROJECT_EXPLANATION.md
-  README.md
-```
-
-## Prerequisites
-
-Install these before running the project:
-
-- Node.js
-- Python 3.12
-- PostgreSQL
-- npm
-
-Python 3.12 is recommended because some pinned backend packages may not provide stable prebuilt wheels for newer Python versions on Windows.
-
-## Backend Setup
-
-Open PowerShell:
-
-```powershell
-cd C:\Users\theva\Downloads\scientific-dashboard-starter\backend
-py -3.12 -m venv venv
-.\venv\Scripts\activate
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-copy .env.example .env
-```
-
-Edit `backend\.env`:
-
-```env
-DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/scientific_dashboard
-```
-
-If your PostgreSQL password contains special URL characters, encode them. For example:
-
-```text
-@ -> %40
-# -> %23
-% -> %25
-/ -> %2F
-: -> %3A
-```
-
-Example:
-
-```env
-DATABASE_URL=postgresql://postgres:abc%40123@localhost:5432/scientific_dashboard
-```
-
-## PostgreSQL Setup
-
-1. Install PostgreSQL for Windows.
-2. Keep the default port as `5432`.
-3. Remember the password for the `postgres` user.
-4. Open pgAdmin.
-5. Create a database named:
-
-```text
-scientific_dashboard
-```
-
-## Seed the Database
-
-With the backend virtual environment activated:
-
-```powershell
-python seed_data.py
-```
-
-This command creates the table if needed and inserts 250 fake compound records.
-
-## Run the Backend
-
-```powershell
-uvicorn main:app --reload
-```
-
-The API runs at:
-
-```text
-http://127.0.0.1:8000
-```
-
-Swagger docs are available at:
-
-```text
-http://127.0.0.1:8000/docs
-```
-
-## Frontend Setup
-
-Open a second PowerShell terminal:
-
-```powershell
-cd C:\Users\theva\Downloads\scientific-dashboard-starter\frontend
-npm install
-copy .env.example .env
-npm run dev
-```
-
-The frontend runs at:
-
-```text
-http://localhost:5173
-```
-
-`frontend\.env.example` contains:
-
-```env
-VITE_API_URL=http://localhost:8000
-```
-
-This tells the React app where the FastAPI backend is running.
-
-## Common Commands
-
-| Command | Where to run it | What it does |
-| --- | --- | --- |
-| `py -3.12 -m venv venv` | `backend/` | Creates a Python 3.12 virtual environment |
-| `.\venv\Scripts\activate` | `backend/` | Activates the backend virtual environment |
-| `pip install -r requirements.txt` | `backend/` | Installs backend dependencies |
-| `python seed_data.py` | `backend/` | Seeds PostgreSQL with 250 fake compounds |
-| `uvicorn main:app --reload` | `backend/` | Starts the FastAPI development server |
-| `npm install` | `frontend/` | Installs frontend dependencies |
-| `npm run dev` | `frontend/` | Starts the Vite frontend dev server |
-| `npm run test` | `frontend/` | Runs Vitest tests |
-| `npm run build` | `frontend/` | Builds the production frontend |
-| `npm run lint` | `frontend/` | Runs ESLint |
-| `npm run storybook` | `frontend/` | Starts Storybook |
 
 ## API Endpoints
 
 | Method | Endpoint | Description |
 | --- | --- | --- |
-| GET | `/` | API health message |
-| GET | `/compounds` | Paginated, filtered, sortable compound list |
-| GET | `/compounds/stats` | Aggregate stats for charts |
-| GET | `/compounds/{compound_id}` | Single compound by ID |
-| POST | `/compounds` | Create a compound |
-| GET | `/compounds/categories/list` | List distinct categories |
+| `GET` | `/` | API health check |
+| `GET` | `/compounds` | Paginated, filtered, sortable compound list |
+| `GET` | `/compounds/stats` | Aggregate category and molecular weight distribution stats |
+| `GET` | `/compounds/{compound_id}` | Single compound by numeric ID |
+| `POST` | `/compounds` | Create a compound |
+| `GET` | `/compounds/categories/list` | List distinct compound categories |
 
 ### `/compounds` Query Parameters
 
-| Parameter | Description |
-| --- | --- |
-| `page` | Page number, default `1` |
-| `page_size` | Results per page, default `20`, max `100` |
-| `category` | Filter by exact category |
-| `min_weight` | Minimum molecular weight |
-| `max_weight` | Maximum molecular weight |
-| `min_toxicity` | Minimum toxicity score |
-| `max_toxicity` | Maximum toxicity score |
-| `sort_by` | `id`, `name`, `molecular_weight`, `toxicity_score`, or `binding_affinity` |
-| `sort_order` | `asc` or `desc` |
+- `page` (default `1`), `page_size` (default `20`, max `100`)
+- `category`, `min_weight`, `max_weight`, `min_toxicity`, `max_toxicity`, `search`
+- `sort_by` (`id`, `name`, `category`, `molecular_weight`, `toxicity_score`, `binding_affinity`), `sort_order` (`asc`, `desc`)
 
-## Storybook
+## Running Locally
 
-```powershell
+### 1. Backend (FastAPI + PostgreSQL)
+
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+# Edit .env with your PostgreSQL DATABASE_URL and CORS_ORIGINS
+python seed_data.py
+uvicorn main:app --reload --port 8000
+```
+
+API docs are available at `http://127.0.0.1:8000/docs`.
+
+### 2. Frontend (React + Vite)
+
+```bash
 cd frontend
+npm ci
+cp .env.example .env
+# Set VITE_API_URL=http://localhost:8000 (or your deployed API URL)
+npm run dev
+```
+
+Open `http://localhost:5173`.
+
+## Running Tests, Lint, and Storybook
+
+```bash
+cd frontend
+npm run lint
+npm test
+npm run build
 npm run storybook
 ```
 
-Storybook includes isolated stories for:
+## Limitations
 
-- `Button`
-- `ScatterPlot`
-- `BarChart`
-- `Histogram`
+- **Synthetic Data**: All compound records, formulas, molecular weights, solubilities, toxicity scores, and binding affinities are synthetically generated in `backend/seed_data.py` using a fixed random seed (`42`) for reproducible demonstration and UI testing.
+- **Sampling**: The scatter plot displays up to 100 compounds per API query (`page_size=100`) and indicates the exact count in its caption.
 
-The chart stories use mock data, so Storybook works without the backend running.
+## License
 
-## Testing
-
-```powershell
-cd frontend
-npm run test
-```
-
-Current test coverage includes:
-
-- Button variants, disabled state, and loading state.
-- Dashboard category dropdown rendering from mocked API data.
+[MIT](LICENSE)

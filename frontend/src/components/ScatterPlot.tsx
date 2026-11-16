@@ -1,53 +1,89 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState, useMemo } from 'react';
 import * as d3 from 'd3';
 import type { Compound } from '../types';
+import { useContainerWidth } from './useContainerWidth';
+import styles from './Charts.module.css';
 
 interface ScatterPlotProps {
   data: Compound[];
+  totalCount?: number;
   onPointClick?: (compound: Compound) => void;
   selectedId?: number | null;
 }
 
-const MARGIN = { top: 20, right: 30, bottom: 50, left: 60 };
-const WIDTH = 600;
-const HEIGHT = 400;
+const MARGIN = { top: 18, right: 24, bottom: 48, left: 56 };
+const HEIGHT = 340;
 const GRID_COLOR = '#e2e8f0';
 const AXIS_COLOR = '#64748b';
 
-export default function ScatterPlot({ data, onPointClick, selectedId }: ScatterPlotProps) {
+const PALETTE = ['#2563eb', '#0d9488', '#ea580c', '#7c3aed', '#dc2626', '#65a30d', '#0284c7'];
+
+export default function ScatterPlot({
+  data,
+  totalCount,
+  onPointClick,
+  selectedId,
+}: ScatterPlotProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const containerWidth = useContainerWidth(containerRef, 600);
+  const [hiddenCategories, setHiddenCategories] = useState<Set<string>>(new Set());
+
+  const categories = useMemo(
+    () => Array.from(new Set(data.map((d) => d.category))).sort(),
+    [data]
+  );
+
+  const colorScale = useMemo(
+    () => d3.scaleOrdinal<string>().domain(categories).range(PALETTE),
+    [categories]
+  );
+
+  const visibleData = useMemo(
+    () => data.filter((d) => !hiddenCategories.has(d.category)),
+    [data, hiddenCategories]
+  );
+
+  const toggleCategory = (category: string) => {
+    setHiddenCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(category)) {
+        next.delete(category);
+      } else {
+        next.add(category);
+      }
+      return next;
+    });
+  };
 
   useEffect(() => {
-    if (!svgRef.current || data.length === 0) return;
+    if (!svgRef.current || visibleData.length === 0) return;
 
+    const width = Math.max(containerWidth, 300);
     const svg = d3.select(svgRef.current);
     svg.selectAll('*').remove();
 
-    const innerWidth = WIDTH - MARGIN.left - MARGIN.right;
+    const innerWidth = Math.max(width - MARGIN.left - MARGIN.right, 160);
     const innerHeight = HEIGHT - MARGIN.top - MARGIN.bottom;
 
     const g = svg
-      .attr('viewBox', `0 0 ${WIDTH} ${HEIGHT}`)
+      .attr('viewBox', `0 0 ${width} ${HEIGHT}`)
       .append('g')
       .attr('transform', `translate(${MARGIN.left},${MARGIN.top})`);
 
     const xScale = d3
       .scaleLinear()
-      .domain([0, d3.max(data, (d) => d.molecular_weight) ?? 800])
+      .domain([0, d3.max(visibleData, (d) => d.molecular_weight) ?? 800])
       .nice()
       .range([0, innerWidth]);
 
     const yScale = d3
       .scaleLinear()
-      .domain([0, d3.max(data, (d) => d.toxicity_score) ?? 10])
+      .domain([0, Math.max(10, d3.max(visibleData, (d) => d.toxicity_score) ?? 10)])
       .nice()
       .range([innerHeight, 0]);
 
-    const categories = Array.from(new Set(data.map((d) => d.category)));
-    const colorScale = d3
-      .scaleOrdinal<string>()
-      .domain(categories)
-      .range(['#2563eb', '#14b8a6', '#f97316', '#8b5cf6', '#ef4444', '#84cc16', '#06b6d4']);
+    const tickCountX = width < 440 ? 5 : 8;
 
     g.append('g')
       .call(d3.axisLeft(yScale).tickSize(-innerWidth).tickFormat(() => ''))
@@ -58,7 +94,7 @@ export default function ScatterPlot({ data, onPointClick, selectedId }: ScatterP
 
     g.append('g')
       .attr('transform', `translate(0,${innerHeight})`)
-      .call(d3.axisBottom(xScale))
+      .call(d3.axisBottom(xScale).ticks(tickCountX))
       .call((selection) => selection.selectAll('path,line').attr('stroke', AXIS_COLOR))
       .call((selection) => selection.selectAll('text').attr('fill', '#334155').style('font-size', '11px'))
       .append('text')
@@ -77,7 +113,7 @@ export default function ScatterPlot({ data, onPointClick, selectedId }: ScatterP
       .append('text')
       .attr('transform', 'rotate(-90)')
       .attr('x', -innerHeight / 2)
-      .attr('y', -45)
+      .attr('y', -42)
       .attr('fill', '#334155')
       .attr('text-anchor', 'middle')
       .style('font-size', '12px')
@@ -85,24 +121,26 @@ export default function ScatterPlot({ data, onPointClick, selectedId }: ScatterP
       .text('Toxicity Score');
 
     const tooltip = d3
-      .select(svgRef.current.parentElement)
+      .select(containerRef.current)
       .selectAll<HTMLDivElement, unknown>('.d3-tooltip')
       .data([null])
       .join('div')
       .attr('class', 'd3-tooltip')
       .style('position', 'absolute')
-      .style('background', 'rgba(15, 23, 42, 0.94)')
+      .style('z-index', '10')
+      .style('background', 'rgba(15, 23, 42, 0.95)')
       .style('border', '1px solid rgba(255,255,255,0.18)')
       .style('border-radius', '8px')
-      .style('color', '#e2e8f0')
+      .style('color', '#f8fafc')
       .style('padding', '8px 10px')
       .style('font-size', '12px')
+      .style('line-height', '1.45')
       .style('pointer-events', 'none')
       .style('opacity', 0)
       .style('box-shadow', '0 18px 34px rgba(15,23,42,0.24)');
 
     g.selectAll('circle')
-      .data(data)
+      .data(visibleData, (d) => String((d as Compound).id))
       .join('circle')
       .attr('cx', (d) => xScale(d.molecular_weight))
       .attr('cy', (d) => yScale(d.toxicity_score))
@@ -110,32 +148,88 @@ export default function ScatterPlot({ data, onPointClick, selectedId }: ScatterP
       .attr('fill', (d) => colorScale(d.category))
       .attr('stroke', (d) => (d.id === selectedId ? '#0f172a' : '#ffffff'))
       .attr('stroke-width', (d) => (d.id === selectedId ? 2.5 : 1.5))
-      .attr('opacity', 0.82)
+      .attr('opacity', 0.84)
       .style('cursor', 'pointer')
       .on('mouseover', function (_event, d) {
         d3.select(this).attr('opacity', 1).attr('r', 7);
         tooltip
           .style('opacity', 1)
           .html(
-            `<strong>${d.name}</strong><br/>${d.category}<br/>MW: ${d.molecular_weight} g/mol<br/>Toxicity: ${d.toxicity_score}`
+            `<strong>${d.name}</strong><br/>Category: ${d.category}<br/>Weight: ${d.molecular_weight} g/mol<br/>Toxicity: ${d.toxicity_score}<br/>Affinity: ${d.binding_affinity} nM`
           );
       })
       .on('mousemove', (event) => {
-        const [x, y] = d3.pointer(event, svgRef.current?.parentElement);
-        tooltip.style('left', `${x + 12}px`).style('top', `${y - 12}px`);
+        if (!containerRef.current) return;
+        const [x, y] = d3.pointer(event, containerRef.current);
+        const clampedX = Math.min(x + 12, Math.max(12, containerWidth - 190));
+        const clampedY = Math.max(8, y - 16);
+        tooltip.style('left', `${clampedX}px`).style('top', `${clampedY}px`);
       })
       .on('mouseout', function (_, d) {
         d3.select(this)
-          .attr('opacity', 0.82)
+          .attr('opacity', 0.84)
           .attr('r', d.id === selectedId ? 7 : 4.5);
         tooltip.style('opacity', 0);
       })
       .on('click', (_, d) => onPointClick?.(d));
-  }, [data, selectedId, onPointClick]);
+  }, [visibleData, selectedId, onPointClick, containerWidth, colorScale]);
+
+  const totalAvailable = totalCount ?? data.length;
 
   return (
-    <div style={{ position: 'relative', width: '100%' }}>
-      <svg ref={svgRef} width="100%" height={HEIGHT} />
+    <div ref={containerRef} className={styles.chartContainer}>
+      {categories.length > 0 && (
+        <div className={styles.legendRow} role="group" aria-label="Toggle compound categories">
+          {categories.map((cat) => {
+            const isHidden = hiddenCategories.has(cat);
+            return (
+              <button
+                key={cat}
+                type="button"
+                className={`${styles.legendItem} ${isHidden ? styles.legendItemInactive : ''}`}
+                aria-pressed={!isHidden}
+                onClick={() => toggleCategory(cat)}
+              >
+                <span
+                  className={styles.legendSwatch}
+                  style={{ backgroundColor: colorScale(cat) }}
+                  aria-hidden="true"
+                />
+                <span>{cat}</span>
+              </button>
+            );
+          })}
+          {hiddenCategories.size > 0 && (
+            <button
+              type="button"
+              className={styles.legendReset}
+              onClick={() => setHiddenCategories(new Set())}
+            >
+              Show all
+            </button>
+          )}
+        </div>
+      )}
+
+      {visibleData.length === 0 ? (
+        <div className={styles.emptyState}>
+          {data.length === 0
+            ? 'No compounds match the current filters.'
+            : 'All categories are hidden. Click a category above or "Show all" to display points.'}
+        </div>
+      ) : (
+        <svg
+          ref={svgRef}
+          width="100%"
+          height={HEIGHT}
+          role="img"
+          aria-label="Scatter plot of molecular weight versus toxicity score"
+        />
+      )}
+
+      <p className={styles.chartCaption}>
+        Showing {visibleData.length} of {totalAvailable} compounds
+      </p>
     </div>
   );
 }

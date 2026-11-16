@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, text
 from typing import Optional, List
 import logging
+import os
 
 from database import engine, get_db, Base
 from models import Compound
@@ -17,14 +18,22 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# Update this list with your deployed frontend URL when you deploy
+DEFAULT_CORS_ORIGINS = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://scientific-dashboard-ui.vercel.app",
+]
+
+cors_origins_env = os.getenv("CORS_ORIGINS", "")
+allow_origins = (
+    [origin.strip() for origin in cors_origins_env.split(",") if origin.strip()]
+    if cors_origins_env
+    else DEFAULT_CORS_ORIGINS
+)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:3000",
-        "https://scientific-dashboard-ui.vercel.app",
-    ],
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -55,7 +64,8 @@ def get_compounds(
     max_weight: Optional[float] = None,
     min_toxicity: Optional[float] = None,
     max_toxicity: Optional[float] = None,
-    sort_by: str = Query("id", pattern="^(id|name|molecular_weight|toxicity_score|binding_affinity)$"),
+    search: Optional[str] = None,
+    sort_by: str = Query("id", pattern="^(id|name|category|molecular_weight|toxicity_score|binding_affinity)$"),
     sort_order: str = Query("asc", pattern="^(asc|desc)$"),
     db: Session = Depends(get_db),
 ):
@@ -71,6 +81,8 @@ def get_compounds(
         query = query.filter(Compound.toxicity_score >= min_toxicity)
     if max_toxicity is not None:
         query = query.filter(Compound.toxicity_score <= max_toxicity)
+    if search:
+        query = query.filter(Compound.name.ilike(f"%{search.strip()}%"))
 
     total = query.count()
 

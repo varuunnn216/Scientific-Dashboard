@@ -44,6 +44,7 @@ export interface CompoundFilters {
   max_weight?: number;
   min_toxicity?: number;
   max_toxicity?: number;
-  sort_by?: 'id' | 'name' | 'molecular_weight' | 'toxicity_score' | 'binding_affinity';
+  search?: string;
+  sort_by?: 'id' | 'name' | 'category' | 'molecular_weight' | 'toxicity_score' | 'binding_affinity';
   sort_order?: 'asc' | 'desc';
 }

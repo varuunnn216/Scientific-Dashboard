@@ -1,11 +1,13 @@
 """
-Run this once to populate the database with realistic fake compound data.
+Run this once to populate the database with reproducible synthetic compound data.
 Usage: python seed_data.py
 """
 import random
 from faker import Faker
 from database import SessionLocal, engine, Base
 from models import Compound
+
+RANDOM_SEED = 42
 
 fake = Faker()
 Base.metadata.create_all(bind=engine)
@@ -25,9 +27,9 @@ def random_formula():
     return formula
 
 
-def generate_compound():
+def generate_compound(index: int):
     return Compound(
-        name=f"{fake.word().capitalize()}-{random.randint(100, 999)}",
+        name=f"CMP-{index + 1:04d}",
         molecular_formula=random_formula(),
         molecular_weight=round(random.uniform(50, 800), 2),
         solubility=round(random.uniform(0.001, 100), 3),
@@ -38,9 +40,11 @@ def generate_compound():
 
 
 def seed(n=250):
+    random.seed(RANDOM_SEED)
+    Faker.seed(RANDOM_SEED)
     db = SessionLocal()
     try:
-        compounds = [generate_compound() for _ in range(n)]
+        compounds = [generate_compound(i) for i in range(n)]
         db.bulk_save_objects(compounds)
         db.commit()
         print(f"Seeded {n} compounds successfully.")
