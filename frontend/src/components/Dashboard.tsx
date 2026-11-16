@@ -11,6 +11,12 @@ import ScatterPlot from './ScatterPlot';
 import BarChart from './BarChart';
 import Histogram from './Histogram';
 import CountUp from './CountUp';
+import SpotlightCard from './reactbits/SpotlightCard';
+import BlurText from './reactbits/BlurText';
+import AnimatedContent from './reactbits/AnimatedContent';
+import ShinyText from './reactbits/ShinyText';
+import ParticlesBg from './reactbits/ParticlesBg';
+import Magnet from './reactbits/Magnet';
 import styles from './Dashboard.module.css';
 
 const PAGE_SIZE = 25;
@@ -301,29 +307,36 @@ export default function Dashboard() {
 
   return (
     <main className={styles.shell}>
-      <section className={styles.hero}>
-        <div className={styles.heroCopy}>
-          <div className={styles.heroMeta}>
-            <span className={styles.eyebrow}>Compound intelligence dashboard</span>
-            <span className={styles.demoBadge}>Synthetic demo data</span>
+      <ParticlesBg />
+      <AnimatedContent delayMs={0}>
+        <section className={styles.hero}>
+          <div className={styles.heroCopy}>
+            <div className={styles.heroMeta}>
+              <span className={styles.eyebrow}>Compound intelligence dashboard</span>
+              <span className={styles.demoBadge}>
+                <ShinyText text="Synthetic demo data" />
+              </span>
+            </div>
+            <h1>
+              <BlurText text="Scientific Compound Data Explorer" delayMs={45} />
+            </h1>
+            <p>
+              Explore molecular properties, toxicity bands, and binding affinity patterns across
+              the compound library.
+            </p>
           </div>
-          <h1>Scientific Compound Data Explorer</h1>
-          <p>
-            Explore molecular properties, toxicity bands, and binding affinity patterns across
-            the compound library.
-          </p>
-        </div>
 
-        <div className={styles.heroVisual} aria-hidden="true">
-          <div className={styles.molecule}>
-            <span />
-            <span />
-            <span />
-            <span />
-            <span />
+          <div className={styles.heroVisual} aria-hidden="true">
+            <div className={styles.molecule}>
+              <span />
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </AnimatedContent>
 
       {error && (
         <div className={styles.error} role="alert">
@@ -331,9 +344,11 @@ export default function Dashboard() {
             <strong>Unable to load compound data</strong>
             <p>{error}</p>
           </div>
-          <button type="button" className={styles.retryButton} onClick={fetchData}>
-            Retry
-          </button>
+          <Magnet>
+            <button type="button" className={styles.retryButton} onClick={fetchData}>
+              Retry
+            </button>
+          </Magnet>
         </div>
       )}
 
@@ -348,34 +363,42 @@ export default function Dashboard() {
         </section>
       ) : (
         <section className={styles.statsGrid} aria-label="Dashboard summary">
-          <article className={styles.metric}>
-            <span>Total compounds</span>
-            <strong>
-              <CountUp value={kpiTotalCompounds} />
-            </strong>
-          </article>
-          <article className={styles.metric}>
-            <span>Categories</span>
-            <strong>
-              <CountUp value={kpiCategoriesCount} />
-            </strong>
-          </article>
-          <article className={styles.metric}>
-            <span>Avg toxicity</span>
-            <strong>
-              {filteredCompounds.length ? <CountUp value={avgToxicity} decimals={2} /> : '--'}
-            </strong>
-          </article>
-          <article className={styles.metric}>
-            <span>Best affinity</span>
-            <strong>
-              {filteredCompounds.length ? (
-                <CountUp value={bestAffinity} decimals={2} suffix=" nM" />
-              ) : (
-                '--'
-              )}
-            </strong>
-          </article>
+          <AnimatedContent delayMs={40}>
+            <SpotlightCard as="article" className={styles.metric}>
+              <span>Total compounds</span>
+              <strong>
+                <CountUp value={kpiTotalCompounds} />
+              </strong>
+            </SpotlightCard>
+          </AnimatedContent>
+          <AnimatedContent delayMs={90}>
+            <SpotlightCard as="article" className={styles.metric}>
+              <span>Categories</span>
+              <strong>
+                <CountUp value={kpiCategoriesCount} />
+              </strong>
+            </SpotlightCard>
+          </AnimatedContent>
+          <AnimatedContent delayMs={140}>
+            <SpotlightCard as="article" className={styles.metric}>
+              <span>Avg toxicity</span>
+              <strong>
+                {filteredCompounds.length ? <CountUp value={avgToxicity} decimals={2} /> : '--'}
+              </strong>
+            </SpotlightCard>
+          </AnimatedContent>
+          <AnimatedContent delayMs={190}>
+            <SpotlightCard as="article" className={styles.metric}>
+              <span>Best affinity</span>
+              <strong>
+                {filteredCompounds.length ? (
+                  <CountUp value={bestAffinity} decimals={2} suffix=" nM" />
+                ) : (
+                  '--'
+                )}
+              </strong>
+            </SpotlightCard>
+          </AnimatedContent>
         </section>
       )}
 
@@ -488,41 +511,47 @@ export default function Dashboard() {
       ) : (
         <>
           <section className={styles.chartGrid}>
-            <article className={styles.panel}>
-              <div className={styles.panelHeader}>
-                <div>
-                  <span>Relationship map</span>
-                  <h2>Molecular Weight vs Toxicity</h2>
+            <AnimatedContent delayMs={120}>
+              <SpotlightCard as="article" className={styles.panel}>
+                <div className={styles.panelHeader}>
+                  <div>
+                    <span>Relationship map</span>
+                    <h2>Molecular Weight vs Toxicity</h2>
+                  </div>
                 </div>
-              </div>
-              <ScatterPlot
-                data={filteredCompounds}
-                totalCount={trimmedSearch ? filteredCompounds.length : apiTotal}
-                onPointClick={(c) => setSelectedId(c.id)}
-                selectedId={selectedId}
-              />
-            </article>
+                <ScatterPlot
+                  data={filteredCompounds}
+                  totalCount={trimmedSearch ? filteredCompounds.length : apiTotal}
+                  onPointClick={(c) => setSelectedId(c.id)}
+                  selectedId={selectedId}
+                />
+              </SpotlightCard>
+            </AnimatedContent>
 
-            <article className={styles.panel}>
-              <div className={styles.panelHeader}>
-                <div>
-                  <span>Category signal</span>
-                  <h2>Avg Binding Affinity by Category</h2>
+            <AnimatedContent delayMs={180}>
+              <SpotlightCard as="article" className={styles.panel}>
+                <div className={styles.panelHeader}>
+                  <div>
+                    <span>Category signal</span>
+                    <h2>Avg Binding Affinity by Category</h2>
+                  </div>
                 </div>
-              </div>
-              <BarChart data={barChartData} />
-            </article>
+                <BarChart data={barChartData} />
+              </SpotlightCard>
+            </AnimatedContent>
           </section>
 
-          <section className={`${styles.panel} ${styles.widePanel}`}>
-            <div className={styles.panelHeader}>
-              <div>
-                <span>Distribution</span>
-                <h2>Molecular Weight Distribution</h2>
+          <AnimatedContent delayMs={220}>
+            <SpotlightCard as="section" className={`${styles.panel} ${styles.widePanel}`}>
+              <div className={styles.panelHeader}>
+                <div>
+                  <span>Distribution</span>
+                  <h2>Molecular Weight Distribution</h2>
+                </div>
               </div>
-            </div>
-            <Histogram data={histogramData} />
-          </section>
+              <Histogram data={histogramData} />
+            </SpotlightCard>
+          </AnimatedContent>
 
           {selectedCompound && (
             <section className={styles.selectedPanel} aria-label="Selected compound details">

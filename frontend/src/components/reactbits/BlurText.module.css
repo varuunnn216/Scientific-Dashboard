@@ -1,0 +1,29 @@
+.wrapper {
+  display: inline-flex;
+  flex-wrap: wrap;
+}
+
+.word {
+  display: inline-block;
+  opacity: 0;
+  filter: blur(8px);
+  transform: translateY(8px);
+  animation: blurIn 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes blurIn {
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .word {
+    opacity: 1;
+    filter: none;
+    transform: none;
+    animation: none;
+  }
+}
