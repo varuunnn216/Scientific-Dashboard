@@ -1,0 +1,33 @@
+.shiny {
+  display: inline-block;
+  background: linear-gradient(
+    120deg,
+    #0369a1 0%,
+    #0369a1 40%,
+    #38bdf8 50%,
+    #0369a1 60%,
+    #0369a1 100%
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shine 4.2s linear infinite;
+}
+
+@keyframes shine {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shiny {
+    background: none;
+    color: #0369a1;
+    animation: none;
+  }
+}

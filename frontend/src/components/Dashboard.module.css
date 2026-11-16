@@ -1,11 +1,11 @@
 .shell {
   min-height: 100vh;
   padding: 20px 28px;
-  color: #14213d;
+  color: #0f172a;
   background:
-    radial-gradient(circle at 16% 6%, rgba(45, 212, 191, 0.22), transparent 28%),
-    radial-gradient(circle at 88% 0%, rgba(96, 165, 250, 0.24), transparent 26%),
-    linear-gradient(135deg, #f8fbff 0%, #eef7f4 45%, #f7f8ff 100%);
+    radial-gradient(circle at 14% 4%, rgba(56, 189, 248, 0.16), transparent 32%),
+    radial-gradient(circle at 86% 2%, rgba(45, 212, 191, 0.14), transparent 30%),
+    linear-gradient(135deg, #f8fafc 0%, #f0f9ff 48%, #f0fdf4 100%);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   box-sizing: border-box;
   overflow-x: hidden;
@@ -31,12 +31,12 @@
   gap: 20px;
   align-items: center;
   padding: 18px 26px;
-  border: 1px solid rgba(148, 163, 184, 0.22);
-  border-radius: 8px;
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  border-radius: 12px;
   background:
-    linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(30, 64, 175, 0.88)),
-    linear-gradient(90deg, #0f172a, #155e75);
-  box-shadow: 0 20px 54px rgba(15, 23, 42, 0.16);
+    radial-gradient(circle at 85% 20%, rgba(56, 189, 248, 0.14), transparent 45%),
+    linear-gradient(135deg, #ffffff 0%, #f0f9ff 58%, #ecfeff 100%);
+  box-shadow: 0 14px 38px rgba(14, 116, 144, 0.08);
   overflow: hidden;
 }
 
@@ -46,7 +46,7 @@
   inset: auto 18px 12px auto;
   width: 160px;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5));
+  background: linear-gradient(90deg, transparent, rgba(2, 132, 199, 0.35));
 }
 
 .heroCopy {
@@ -77,17 +77,17 @@
 }
 
 .hero .eyebrow {
-  color: #7dd3fc;
+  color: #0284c7;
 }
 
 .demoBadge {
   display: inline-flex;
   align-items: center;
-  padding: 3px 9px;
+  padding: 3px 10px;
   border-radius: 999px;
-  border: 1px solid rgba(125, 211, 252, 0.45);
-  background: rgba(15, 23, 42, 0.55);
-  color: #e0f2fe;
+  border: 1px solid #bae6fd;
+  background: #e0f2fe;
+  color: #0369a1;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -95,7 +95,7 @@
 
 .hero h1 {
   margin: 8px 0 6px;
-  color: #ffffff;
+  color: #0f172a;
   font-size: clamp(24px, 3vw, 36px);
   line-height: 1.08;
   letter-spacing: -0.01em;
@@ -104,7 +104,7 @@
 .hero p {
   max-width: 680px;
   margin: 0;
-  color: #dbeafe;
+  color: #334155;
   font-size: 14px;
   line-height: 1.45;
 }
@@ -112,10 +112,12 @@
 .heroVisual {
   position: relative;
   min-height: 110px;
-  border-radius: 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(14, 165, 233, 0.16);
   background:
-    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+    linear-gradient(rgba(14, 165, 233, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(14, 165, 233, 0.08) 1px, transparent 1px),
+    rgba(255, 255, 255, 0.72);
   background-size: 24px 24px;
   overflow: hidden;
 }
@@ -130,7 +132,7 @@
   content: "";
   position: absolute;
   height: 2px;
-  background: rgba(125, 211, 252, 0.66);
+  background: rgba(2, 132, 199, 0.35);
   transform-origin: left center;
 }
 
@@ -153,37 +155,62 @@
   width: 18px;
   height: 18px;
   border-radius: 999px;
-  background: #22d3ee;
-  box-shadow: 0 0 0 7px rgba(34, 211, 238, 0.14), 0 10px 24px rgba(34, 211, 238, 0.24);
+  background: #0ea5e9;
+  box-shadow: 0 0 0 6px rgba(14, 165, 233, 0.14), 0 8px 18px rgba(14, 165, 233, 0.22);
+  animation: floatNode 4.5s ease-in-out infinite;
 }
 
 .molecule span:nth-child(1) {
   top: 16px;
   left: 24px;
+  animation-delay: 0s;
 }
 
 .molecule span:nth-child(2) {
   top: 42px;
   left: 96px;
-  background: #34d399;
+  background: #10b981;
+  box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.14), 0 8px 18px rgba(16, 185, 129, 0.2);
+  animation-delay: 0.6s;
 }
 
 .molecule span:nth-child(3) {
   top: 14px;
   right: 34px;
-  background: #60a5fa;
+  background: #3b82f6;
+  box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.14), 0 8px 18px rgba(59, 130, 246, 0.2);
+  animation-delay: 1.2s;
 }
 
 .molecule span:nth-child(4) {
   bottom: 14px;
   left: 56px;
   background: #f59e0b;
+  box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.14), 0 8px 18px rgba(245, 158, 11, 0.2);
+  animation-delay: 1.8s;
 }
 
 .molecule span:nth-child(5) {
   right: 22px;
   bottom: 18px;
-  background: #a78bfa;
+  background: #8b5cf6;
+  box-shadow: 0 0 0 6px rgba(139, 92, 246, 0.14), 0 8px 18px rgba(139, 92, 246, 0.2);
+  animation-delay: 2.4s;
+}
+
+@keyframes floatNode {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .molecule span {
+    animation: none;
+  }
 }
 
 .statsGrid {
