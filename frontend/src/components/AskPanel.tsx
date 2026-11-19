@@ -54,7 +54,7 @@ function ResultChart({ result }: { result: Result }) {
   const x = scaleLinear().domain([min, max || (min === 0 ? 1 : 0)]).range([0, 100]);
   return (
     <section className={styles.chart}>
-      <h3>{result.columns[numericIndex]} by {result.columns[categoryIndex]}</h3>
+      <h3>{result.columns[numericIndex].replaceAll('_', ' ')} by {result.columns[categoryIndex].replaceAll('_', ' ')}</h3>
       <div className={styles.bars} role="region" aria-label="Bar chart" tabIndex={0}>
         {result.rows.map((row, index) => {
           const value = values[index];
@@ -136,7 +136,7 @@ function QueryResult({ result }: { result: Result }) {
 }
 
 export default function AskPanel() {
-  const input = useRef<HTMLInputElement>(null);
+  const input = useRef<HTMLTextAreaElement>(null);
   const [question, setQuestion] = useState('');
   const [reply, setReply] = useState<Reply>();
   const [loading, setLoading] = useState(false);
@@ -168,9 +168,15 @@ export default function AskPanel() {
           <form onSubmit={run} className={styles.form}>
             <label htmlFor="ask-question">Your question</label>
             <div className={styles.controls}>
-              <input id="ask-question" ref={input} value={question} maxLength={300}
+              <textarea id="ask-question" ref={input} rows={2} value={question} maxLength={300}
                 onChange={event => setQuestion(event.target.value)}
-                placeholder="Ask about the compound library…" required />
+                onKeyDown={event => {
+                  if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+                    event.preventDefault();
+                    event.currentTarget.form?.requestSubmit();
+                  }
+                }}
+                placeholder="Ask about the compounds…" required />
               <button type="submit" className={styles.run} disabled={loading || !question.trim()}>
                 {loading ? 'Running…' : 'Run'}
               </button>

@@ -8,4 +8,7 @@ ALTER ROLE ask_reader SET search_path = pg_catalog;
 REVOKE ALL ON ALL TABLES IN SCHEMA public FROM PUBLIC, ask_reader;
 REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 GRANT USAGE ON SCHEMA public TO ask_reader;
-GRANT SELECT ON TABLE public.compounds TO ask_reader;
+GRANT SELECT (
+    id, name, molecular_formula, molecular_weight, solubility, toxicity_score,
+    binding_affinity, category, created_at
+) ON TABLE public.compounds TO ask_reader;

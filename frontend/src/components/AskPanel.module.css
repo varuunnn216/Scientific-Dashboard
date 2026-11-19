@@ -60,7 +60,11 @@
 }
 
 .muted:empty {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  clip-path: inset(50%);
+  overflow: hidden;
 }
 
 .form {
@@ -81,7 +85,7 @@
   flex-wrap: wrap;
 }
 
-.controls input,
+.controls textarea,
 .card button {
   min-height: 42px;
   border: 1px solid #777780;
@@ -92,15 +96,16 @@
   box-sizing: border-box;
 }
 
-.controls input {
+.controls textarea {
   flex: 1;
   min-width: 0;
   width: 100%;
   padding: 8px 10px;
+  resize: vertical;
   background: #09090b;
 }
 
-.controls input::placeholder {
+.controls textarea::placeholder {
   color: #a1a1aa;
 }
 
