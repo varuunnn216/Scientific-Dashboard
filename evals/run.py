@@ -43,6 +43,7 @@ class Budget:
     def __init__(self):
         self.windows = defaultdict(deque)
         self.cooldowns = {}
+        self.queue_seconds = 0.0
         self.settings = {
             name: tuple(int(os.getenv(f"LLM_{name.upper()}_{suffix}") or default)
                         for suffix, default in zip(("RPM", "TPM"), defaults))
@@ -50,6 +51,7 @@ class Budget:
         }
 
     def before_call(self, provider, messages):
+        queued = time.monotonic()
         rpm, tpm = self.settings[provider.name]
         if provider.model.startswith("openai/gpt-oss-") and provider.name == "groq":
             count = lambda content: len(groq_encoding().encode_ordinary(content))
@@ -63,10 +65,15 @@ class Budget:
             now = time.monotonic()
             while window and now - window[0][0] >= 60:
                 window.popleft()
-            if len(window) < rpm and sum(tokens for _, tokens in window) + reservation <= tpm:
-                window.append((now, reservation))
-                return
+            if len(window) < rpm and sum(item[1] for item in window) + reservation <= tpm:
+                entry = [now, reservation]
+                window.append(entry)
+                self.queue_seconds += time.monotonic() - queued
+                return entry
             time.sleep(max(0, 60 - (now - window[0][0])) + 0.01)
+
+    def after_call(self, provider, reservation, used):
+        reservation[1] = used + 48
 
     def get(self, provider):
         return self.cooldowns.get(provider, 0) > time.time()
@@ -119,11 +126,14 @@ def rows_match(actual, expected, ordered):
 
 
 def run_case(case, budget, expected):
-    provider = ProviderSession(before_call=budget.before_call, cooldown=budget)
+    budget.queue_seconds = 0.0
+    provider = ProviderSession(before_call=budget.before_call, after_call=budget.after_call, cooldown=budget)
     try:
         result = ask(case["question"], provider)
     finally:
         provider.close()
+    queue_ms = round(1000 * budget.queue_seconds)
+    result["latency_ms"] = max(0, result["latency_ms"] - queue_ms)
     status = result["status"]
     passed = status == "refuse"
     if case.get("gold_sql"):
@@ -139,7 +149,7 @@ def run_case(case, budget, expected):
     keep = ("status", "sql", "latency_ms", "tokens", "model_calls", "provider", "model", "repaired", "valid_sql")
     return {
         **{key: result[key] for key in keep},
-        "pass": passed, "failure_kind": failure, "reason": None if passed else reason,
+        "pass": passed, "failure_kind": failure, "reason": None if passed else reason, "queue_ms": queue_ms,
     }
 
 
@@ -217,6 +227,7 @@ def report(cases, attempts, completed, metadata, note=None):
         "- Cases were authored for this project; they are not an independent benchmark.",
         "- Results vary by model and run. Partial passes are excluded from the across-pass mean.",
         "- Token counts include provider-reported usage only. The attack metric covers these cases.",
+        "- Latency excludes evaluator-side scheduling delays.",
     ]
     target = RESULTS / "latest.md"
     temp = target.with_suffix(".tmp")
@@ -241,22 +252,29 @@ def main():
     if not args.resume and not args.verify_gold and journal.exists():
         parser.error("Progress already exists. Use --resume or move the prior run files.")
     budget = Budget()
+    freeze_paths = ("backend/ask", "backend/requirements.txt", "evals/run.py", "evals/cases.jsonl", "evals/requirements.txt")
     metadata = {
         "commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
+        "implementation_sha256": hashlib.sha256(subprocess.check_output(
+            ["git", "ls-tree", "-r", "HEAD", "--", *freeze_paths], cwd=ROOT,
+        )).hexdigest(),
         "cases_sha256": hashlib.sha256(cases_path.read_bytes()).hexdigest(),
         "models": [{"name": p.name, "model": p.model, "effort": p.effort} for p in configured()],
         "rate_limits": {k: list(v) for k, v in budget.settings.items()},
         "timeout": os.getenv("LLM_TIMEOUT_SECONDS") or "8",
     }
     attempts = read_jsonl(journal) if args.resume else []
-    if args.resume and state.exists() and json.loads(state.read_text()) != metadata:
-        parser.error("Commit or configuration changed. Preserve the old run files and start a new run.")
+    if args.resume and state.exists():
+        frozen = json.loads(state.read_text())
+        metadata["commit"] = frozen["commit"]
+        if frozen != metadata:
+            parser.error("Implementation or configuration changed. Preserve the old run files and start a new run.")
     completed = {(row["pass_number"], row["id"]): row for row in attempts if row["final"]}
     if not configured() and not args.verify_gold:
         report(cases, attempts, completed, metadata, "No provider credential was configured.")
         return
     if not args.verify_gold and subprocess.check_output(
-        ["git", "diff", "HEAD", "--", "backend/ask", "evals/run.py", "evals/cases.jsonl"], cwd=ROOT,
+        ["git", "diff", "HEAD", "--", *freeze_paths], cwd=ROOT,
     ):
         parser.error("Commit the evaluator and agent before running the frozen evaluation.")
     from fastapi.encoders import jsonable_encoder

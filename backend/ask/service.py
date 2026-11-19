@@ -5,7 +5,7 @@ import psycopg2
 from fastapi.encoders import jsonable_encoder
 
 from .db import execute
-from .prompt import messages
+from .prompt import REFUSAL_REASONS, messages
 from .providers import ProviderUnavailable
 from .sql import UnsafeSQL, validate
 
@@ -33,7 +33,7 @@ def parse_response(content):
             return result
     if result.get("status") == "ok" and set(result) == {"status", "sql", "explanation"}:
         if all(isinstance(result[key], str) and result[key].strip() for key in ("sql", "explanation")):
-            if len(result["explanation"]) <= 600 and result["explanation"].isascii():
+            if len(result["explanation"]) <= 600:
                 return result
     raise ValueError("Return the specified JSON fields.")
 
@@ -72,7 +72,8 @@ def ask(question, provider, execute_query=execute):
             correction = "Return valid JSON with the required fields."
             continue
         if decision["status"] == "refuse":
-            return response("refuse", reason=REFUSAL_REASON)
+            reason = decision["reason"].strip()
+            return response("refuse", reason=reason if reason in REFUSAL_REASONS else REFUSAL_REASON)
         try:
             sql, probe = validate(decision["sql"])
         except UnsafeSQL as error:

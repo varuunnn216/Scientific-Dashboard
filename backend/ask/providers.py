@@ -18,7 +18,7 @@ class Provider:
     name: str
     url: str
     model: str
-    effort: str
+    effort: str | None
     key: str
 
 
@@ -48,9 +48,10 @@ def retry_delay(value):
 class ProviderSession:
     """Count every outgoing HTTP attempt against the same two-call budget."""
 
-    def __init__(self, providers=None, before_call=None, cooldown=None, client=None):
+    def __init__(self, providers=None, before_call=None, after_call=None, cooldown=None, client=None):
         self.providers = configured() if providers is None else providers
         self.before_call = before_call
+        self.after_call = after_call
         self.cooldown = cooldown
         self.client = client or httpx.Client(
             timeout=float(os.getenv("LLM_TIMEOUT_SECONDS") or "8"), trust_env=False,
@@ -66,8 +67,7 @@ class ProviderSession:
             order.sort(key=lambda p: p.name != self.provider)
         while order and self.calls < 2:
             provider = order.pop(0)
-            if self.before_call:
-                self.before_call(provider, messages)
+            reservation = self.before_call(provider, messages) if self.before_call else None
             self.calls += 1
             self.model = provider.model
             self.provider = provider.name
@@ -91,10 +91,18 @@ class ProviderSession:
                     used = payload.get("usage", {}).get("total_tokens")
                     if isinstance(used, int) and used >= 0:
                         self.tokens += used
+                        if self.after_call:
+                            self.after_call(provider, reservation, used)
                     return payload["choices"][0]["message"]["content"]
                 except (TypeError, ValueError, KeyError, AttributeError, IndexError):
                     return None
             code = response.status_code
+            if code == 400:
+                try:
+                    if response.json().get("error", {}).get("code") == "json_validate_failed":
+                        return None
+                except (AttributeError, ValueError):
+                    pass
             if code == 429 and self.is_daily_limit(response):
                 if self.cooldown:
                     self.cooldown.set(provider.name, 86400)
