@@ -6,6 +6,7 @@ from typing import Optional, List
 import logging
 import os
 
+from ask.routes import router as ask_router
 from database import engine, get_db, Base
 from models import Compound
 import schemas
@@ -18,15 +19,13 @@ app = FastAPI(
     version="1.0.0",
 )
 
-DEFAULT_CORS_ORIGINS = [
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "https://scientific-dashboard-ui.vercel.app",
-]
+DEFAULT_CORS_ORIGINS = ["https://scientific-dashboard-ui.vercel.app"]
+if os.getenv("VERCEL_ENV") != "production":
+    DEFAULT_CORS_ORIGINS += ["http://localhost:5173", "http://localhost:3000"]
 
 cors_origins_env = os.getenv("CORS_ORIGINS", "")
 allow_origins = (
-    [origin.strip() for origin in cors_origins_env.split(",") if origin.strip()]
+    [origin.strip() for origin in cors_origins_env.split(",") if origin.strip().startswith(("https://", "http://")) and "*" not in origin]
     if cors_origins_env
     else DEFAULT_CORS_ORIGINS
 )
@@ -40,14 +39,17 @@ app.add_middleware(
 )
 
 
+app.include_router(ask_router)
+
+
 @app.on_event("startup")
 def validate_database_connection():
     try:
         with engine.connect() as connection:
             connection.execute(text("SELECT 1"))
         Base.metadata.create_all(bind=engine)
-    except Exception as exc:
-        logger.warning("Database is unreachable; API started without validating tables: %s", exc)
+    except Exception:
+        logger.warning("Database is unreachable; API started without validating tables.")
 
 
 @app.get("/")

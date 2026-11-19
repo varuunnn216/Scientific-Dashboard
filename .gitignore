@@ -11,3 +11,7 @@ frontend/dist/
 # Local editor and OS files
 .DS_Store
 Thumbs.db
+
+evals/results/progress.jsonl
+evals/results/run-config.json
+evals/results/latest.tmp

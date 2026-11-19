@@ -5,3 +5,7 @@ psycopg2-binary==2.9.9
 pydantic==2.7.4
 python-dotenv==1.0.1
 faker==25.8.0
+
+pglast==7.24
+redis==6.4.0
+httpx==0.28.1
