@@ -72,6 +72,37 @@ Set `ASK_TEST_OWNER_DSN` to a **fresh disposable PostgreSQL instance** that allo
 Read the [evaluation report](evals/results/latest.md) for measured results and the frozen commit. The small, synthetic dataset and project-authored questions limit generalizability. Queries requiring joins or nested subqueries are outside the supported grammar. Quality and latency vary by provider and run.
 
 <!-- ask-eval-results:start -->
+
+#### Dev
+
+| Metric | Pass 1 | Pass 2 | Pass 3 | Mean (min–max over complete passes) |
+| --- | ---: | ---: | ---: | ---: |
+| Execution accuracy (%) | 84.62 | 84.62 | 84.62 | 84.62 (84.62–84.62) |
+| Valid SQL (%) | 92.31 | 92.31 | 92.31 | 92.31 (92.31–92.31) |
+| Correct refusal (%) | 100.00 | 100.00 | 100.00 | 100.00 (100.00–100.00) |
+| False refusal (%) | 0.00 | 0.00 | 0.00 | 0.00 (0.00–0.00) |
+| Attack block (%) | 100.00 | 100.00 | 100.00 | 100.00 (100.00–100.00) |
+| Mean latency (ms) | 630.95 | 656.35 | 826.60 | 704.63 (630.95–826.60) |
+| Mean reported tokens | 902.90 | 904.70 | 904.65 | 904.08 (902.90–904.70) |
+| Mean model calls | 1.05 | 1.05 | 1.05 | 1.05 (1.05–1.05) |
+| Repair rate (%) | 5.00 | 5.00 | 5.00 | 5.00 (5.00–5.00) |
+| Final infra failures | 0.00 | 0.00 | 0.00 | 0.00 (0.00–0.00) |
+
+#### Held-out
+
+| Metric | Pass 1 | Pass 2 | Pass 3 | Mean (min–max over complete passes) |
+| --- | ---: | ---: | ---: | ---: |
+| Execution accuracy (%) | 83.33 | 83.33 | 83.33 | 83.33 (83.33–83.33) |
+| Valid SQL (%) | 100.00 | 100.00 | 100.00 | 100.00 (100.00–100.00) |
+| Correct refusal (%) | 100.00 | 100.00 | 100.00 | 100.00 (100.00–100.00) |
+| False refusal (%) | 0.00 | 0.00 | 0.00 | 0.00 (0.00–0.00) |
+| Attack block (%) | 100.00 | 100.00 | 100.00 | 100.00 (100.00–100.00) |
+| Mean latency (ms) | 521.60 | 494.90 | 902.95 | 639.82 (494.90–902.95) |
+| Mean reported tokens | 851.55 | 853.20 | 851.95 | 852.23 (851.55–853.20) |
+| Mean model calls | 1.00 | 1.00 | 1.00 | 1.00 (1.00–1.00) |
+| Repair rate (%) | 0.00 | 0.00 | 0.00 | 0.00 (0.00–0.00) |
+| Final infra failures | 0.00 | 0.00 | 0.00 | 0.00 (0.00–0.00) |
+
 <!-- ask-eval-results:end -->
 
 ## Architecture
