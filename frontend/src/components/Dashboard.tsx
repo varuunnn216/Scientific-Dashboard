@@ -17,6 +17,7 @@ import AnimatedContent from './reactbits/AnimatedContent';
 import ShinyText from './reactbits/ShinyText';
 import ParticlesBg from './reactbits/ParticlesBg';
 import Magnet from './reactbits/Magnet';
+import askStyles from './AskPanel.module.css';
 import styles from './Dashboard.module.css';
 
 const PAGE_SIZE = 25;
@@ -324,6 +325,7 @@ export default function Dashboard() {
               Explore molecular properties, toxicity bands, and binding affinity patterns across
               the compound library.
             </p>
+            <a className={askStyles.entry} href="#ask">Ask the Data →</a>
           </div>
 
           <div className={styles.heroVisual} aria-hidden="true">

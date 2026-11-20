@@ -9,7 +9,7 @@ Interactive full-stack dashboard for filtering, analyzing, and visualizing synth
 
 ![React](https://img.shields.io/badge/React-19-61dafb)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-SQLAlchemy-4169e1)
 ![D3](https://img.shields.io/badge/D3.js-7-f9a03c)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green)
@@ -19,6 +19,91 @@ Interactive full-stack dashboard for filtering, analyzing, and visualizing synth
 The Scientific Compound Data Explorer lets users filter compounds by category, molecular weight range, and ID, inspect summary KPIs, explore three responsive D3 visualizations, sort and paginate through compound records, and export filtered results to CSV.
 
 > **Note:** The dataset is synthetic demo data generated with a fixed random seed (`seed_data.py`). It is not a real pharmaceutical or chemistry dataset.
+
+## Ask the Data
+
+Ask a question about the synthetic compound library and inspect the generated SQL, executed results, and query explanation.
+
+![Ask the Data showing a grouped query, bar chart, and results](docs/ask-the-data.png)
+
+```mermaid
+flowchart LR
+    Q["Question"] --> A["FastAPI · quota and cache"]
+    A -->|Cache miss| M["LLM · schema and question"]
+    M --> V["PostgreSQL parser and allowlists"]
+    V -->|Validated SELECT| D[("PostgreSQL · ask_reader")]
+    D --> R["SQL, query explanation and rows"]
+    V -->|Rejected after repair| R
+    A -->|Cache hit| R
+```
+
+The provider receives the question and the synthetic schema. Repair requests include a sanitized error hint. Result rows stay between PostgreSQL and the API. Each question has a shared budget of two provider calls, including retries, failover, and repair. PostgreSQL's parser handles comments and statement boundaries before an AST allowlist checks the query shape, relations, columns, and functions. It supports one SELECT, optionally with one bounded, nonrecursive CTE, and caps the response at 200 rows. A one-row probe detects truncation when the service supplies the cap. See [SECURITY.md](SECURITY.md).
+
+### Provider configuration
+
+The defaults are Groq `openai/gpt-oss-20b` with low reasoning, Gemini `gemini-3.5-flash-lite` with its default minimal thinking, and Cerebras `qwen-3.8-27b` with reasoning disabled. The API requests JSON object output and supplies no tools. The live evaluation used Groq. [Groq model](https://console.groq.com/docs/model/openai/gpt-oss-20b), [Gemini OpenAI compatibility](https://ai.google.dev/gemini-api/docs/openai), [Cerebras OpenAI compatibility](https://inference-docs.cerebras.ai/resources/openai)
+
+Groq lists a free plan. Gemini publishes free-tier pricing and shows active limits per project in AI Studio. Cerebras offers trial credits with an expiry. Set the runner's per-model `LLM_*_RPM` and `LLM_*_TPM` from your account limits before starting an eval. [Groq limits](https://console.groq.com/docs/rate-limits), [Gemini limits](https://ai.google.dev/gemini-api/docs/rate-limits), [Cerebras limits](https://inference-docs.cerebras.ai/support/rate-limits)
+
+### Run Ask the Data locally
+
+1. Seed a fresh PostgreSQL database using the instructions below. Run `backend/ask_readonly.sql` as the database owner. Configure authentication for `ask_reader` using your PostgreSQL host's credential management.
+2. Run Redis locally or supply an isolated TLS-enabled Redis instance. Set `ASK_REDIS_URL` and choose a unique `ASK_REDIS_NAMESPACE` for the environment. Redis stores shared quotas, provider cooldowns and short-lived cached results.
+3. Set `ASK_DATABASE_URL` to the restricted `ask_reader` DSN and `ASK_ENABLED=true`. Set a provider key as a host secret and configure `LLM_PROVIDER_ORDER`. Use `CORS_ORIGINS` for the exact frontend origin.
+4. Open the dashboard and choose **Ask the Data**, or navigate to `/#ask`. Set `ASK_ENABLED=false` to pause requests. The default caps are five per IP per UTC minute, 20 per IP per UTC day, and 100 globally per UTC day. Use `ASK_PER_IP_MINUTE`, `ASK_PER_IP_DAY`, and `ASK_GLOBAL_DAY` to configure them.
+
+### POST /api/ask
+
+Send JSON with a `question` string of up to 300 characters. A successful response has `status: "ok"`, `sql`, `explanation`, `columns`, `rows`, `row_count`, `truncated`, `latency_ms`, `model`, `tokens`, and `repaired`. Responses also identify the provider and model call count. The API can return `refuse` or `error` with a readable reason. Rate-limited requests return `capacity` with HTTP 429. The kill switch returns `paused` with HTTP 503.
+
+### Tests and evaluations
+
+```bash
+python -m pip install -r backend/requirements-dev.txt -r evals/requirements.txt
+(cd backend && python -m pytest)
+(cd frontend && npm ci && npm test && npm run lint && npm run build)
+python evals/run.py --verify-gold
+python evals/run.py --budget 40
+python evals/run.py --resume --budget 40
+```
+
+Set `ASK_TEST_OWNER_DSN` to a **fresh disposable PostgreSQL instance** that allows the role test to log in as owner and reader. Set `ASK_TEST_REDIS_URL` for the Redis integration test. The eval reads `backend/.env`, uses `ASK_DATABASE_URL`, and calls the same query service with its own rate limiter. Use a seeded synthetic database. The daily case budget survives resuming, and the journal keeps infrastructure failures and their one retry. The evaluator bypasses the web cache for independent passes.
+
+Read the [evaluation report](evals/results/latest.md) for measured results and the frozen commit. The small, synthetic dataset and project-authored questions limit generalizability. Queries requiring joins or nested subqueries are outside the supported grammar. Quality and latency vary by provider and run.
+
+<!-- ask-eval-results:start -->
+
+#### Dev
+
+| Metric | Pass 1 | Pass 2 | Pass 3 | Mean (min–max over complete passes) |
+| --- | ---: | ---: | ---: | ---: |
+| Execution accuracy (%) | 84.62 | 84.62 | 84.62 | 84.62 (84.62–84.62) |
+| Valid SQL (%) | 92.31 | 92.31 | 92.31 | 92.31 (92.31–92.31) |
+| Correct refusal (%) | 100.00 | 100.00 | 100.00 | 100.00 (100.00–100.00) |
+| False refusal (%) | 0.00 | 0.00 | 0.00 | 0.00 (0.00–0.00) |
+| Attack block (%) | 100.00 | 100.00 | 100.00 | 100.00 (100.00–100.00) |
+| Mean latency (ms) | 630.95 | 656.35 | 826.60 | 704.63 (630.95–826.60) |
+| Mean reported tokens | 902.90 | 904.70 | 904.65 | 904.08 (902.90–904.70) |
+| Mean model calls | 1.05 | 1.05 | 1.05 | 1.05 (1.05–1.05) |
+| Repair rate (%) | 5.00 | 5.00 | 5.00 | 5.00 (5.00–5.00) |
+| Final infra failures | 0.00 | 0.00 | 0.00 | 0.00 (0.00–0.00) |
+
+#### Held-out
+
+| Metric | Pass 1 | Pass 2 | Pass 3 | Mean (min–max over complete passes) |
+| --- | ---: | ---: | ---: | ---: |
+| Execution accuracy (%) | 83.33 | 83.33 | 83.33 | 83.33 (83.33–83.33) |
+| Valid SQL (%) | 100.00 | 100.00 | 100.00 | 100.00 (100.00–100.00) |
+| Correct refusal (%) | 100.00 | 100.00 | 100.00 | 100.00 (100.00–100.00) |
+| False refusal (%) | 0.00 | 0.00 | 0.00 | 0.00 (0.00–0.00) |
+| Attack block (%) | 100.00 | 100.00 | 100.00 | 100.00 (100.00–100.00) |
+| Mean latency (ms) | 521.60 | 494.90 | 902.95 | 639.82 (494.90–902.95) |
+| Mean reported tokens | 851.55 | 853.20 | 851.95 | 852.23 (851.55–853.20) |
+| Mean model calls | 1.00 | 1.00 | 1.00 | 1.00 (1.00–1.00) |
+| Repair rate (%) | 0.00 | 0.00 | 0.00 | 0.00 (0.00–0.00) |
+| Final infra failures | 0.00 | 0.00 | 0.00 | 0.00 (0.00–0.00) |
+
+<!-- ask-eval-results:end -->
 
 ## Architecture
 
@@ -67,6 +152,7 @@ flowchart LR
 | `GET` | `/compounds/{compound_id}` | Single compound by numeric ID |
 | `POST` | `/compounds` | Create a compound |
 | `GET` | `/compounds/categories/list` | List distinct compound categories |
+| `POST` | `/api/ask` | Ask a read-only question about the synthetic data |
 
 ### `/compounds` Query Parameters
 

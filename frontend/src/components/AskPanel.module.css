@@ -1,0 +1,234 @@
+.shell {
+  text-align: left;
+  color-scheme: dark;
+}
+
+.layout {
+  display: grid;
+  gap: 14px;
+  width: min(900px, 100%);
+  margin: 0 auto;
+}
+
+.layout a,
+.entry {
+  display: inline-block;
+  padding-block: 8px;
+  color: #e4e4e7;
+  text-underline-offset: 4px;
+  font-weight: 650;
+}
+
+.entry {
+  margin-top: 8px;
+}
+
+.card {
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+  padding: clamp(16px, 3vw, 28px);
+  border: 1px solid #3f3f46;
+  border-radius: 14px;
+  background: #18181b;
+}
+
+.card h1,
+.card h2,
+.card h3 {
+  margin: 0;
+  color: #fafafa;
+  font-family: inherit;
+}
+
+.card h1 {
+  font-size: clamp(2rem, 5vw, 2.8rem);
+  font-weight: 700;
+  line-height: 1.12;
+}
+
+.card h3,
+.form label {
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.muted {
+  color: #c4c4cd;
+  font-size: .85rem;
+  overflow-wrap: anywhere;
+}
+
+.muted:empty {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  clip-path: inset(50%);
+  overflow: hidden;
+}
+
+.form {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.controls,
+.line {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.line {
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.controls textarea,
+.card button {
+  min-height: 42px;
+  border: 1px solid #777780;
+  border-radius: 8px;
+  color: #fafafa;
+  background: #27272a;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.controls textarea {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  padding: 8px 10px;
+  resize: vertical;
+  background: #09090b;
+}
+
+.controls textarea::placeholder {
+  color: #a1a1aa;
+}
+
+.card button {
+  padding: 7px 11px;
+  font-size: .85rem;
+  cursor: pointer;
+}
+
+.card button:hover:not(:disabled) {
+  background: #3f3f46;
+}
+
+.card .run {
+  min-width: 80px;
+  color: #18181b;
+  background: #fafafa;
+  font-weight: 700;
+}
+
+.card .run:hover:not(:disabled) {
+  background: #d4d4d8;
+}
+
+.card button:disabled {
+  opacity: .65;
+  cursor: default;
+}
+
+.card :focus-visible,
+.shell nav a:focus-visible,
+.entry:focus-visible {
+  outline: 2px solid #a5b4fc;
+  outline-offset: 3px;
+}
+
+.examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.examples button {
+  text-align: left;
+}
+
+.card pre,
+.table,
+.bars {
+  max-width: 100%;
+  overflow: auto;
+  margin: 0;
+  border: 1px solid #52525b;
+  border-radius: 8px;
+}
+
+.card pre {
+  padding: 12px;
+  background: #09090b;
+}
+
+.card pre code {
+  color: #f4f4f5;
+  background: none;
+  padding: 0;
+}
+
+.table,
+.bars {
+  max-height: 18rem;
+}
+
+.table table {
+  min-width: 100%;
+  border-collapse: collapse;
+  font-size: .85rem;
+  white-space: nowrap;
+}
+
+.table th,
+.table td {
+  padding: 6px 12px;
+  border-bottom: 1px solid #3f3f46;
+  text-align: left;
+}
+
+.table th {
+  position: sticky;
+  top: 0;
+  background: #18181b;
+}
+
+.chart {
+  display: grid;
+  gap: 8px;
+  margin-block: 8px;
+}
+
+.bars {
+  padding: 8px 12px;
+}
+
+.barRow {
+  display: grid;
+  grid-template-columns: minmax(5rem, 1fr) minmax(2rem, 2fr) minmax(3rem, auto);
+  align-items: center;
+  gap: 8px;
+  font-size: .8rem;
+}
+
+.barRow span:first-child {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.barRow svg {
+  width: 100%;
+  height: 12px;
+  fill: #a5b4fc;
+}
+
+.barRow span:last-child {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
