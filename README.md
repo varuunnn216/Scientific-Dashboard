@@ -52,6 +52,30 @@ Groq lists a free plan. Gemini publishes free-tier pricing and shows active limi
 3. Set `ASK_DATABASE_URL` to the restricted `ask_reader` DSN and `ASK_ENABLED=true`. Set a provider key as a host secret and configure `LLM_PROVIDER_ORDER`. Use `CORS_ORIGINS` for the exact frontend origin.
 4. Open the dashboard and choose **Ask the Data**, or navigate to `/#ask`. Set `ASK_ENABLED=false` to pause requests. The default caps are five per IP per UTC minute, 20 per IP per UTC day, and 100 globally per UTC day. Use `ASK_PER_IP_MINUTE`, `ASK_PER_IP_DAY`, and `ASK_GLOBAL_DAY` to configure them.
 
+#### Check the local Ask setup
+
+With the API running on port 8000, try a small query from the terminal:
+
+```sh
+curl -sS -i http://127.0.0.1:8000/api/ask \
+  -H 'Content-Type: application/json' \
+  -d '{"question":"How many compounds are in each category?"}'
+```
+
+An `ok` response includes the generated SQL and one result row per category
+present in the database. If the terminal request works and the browser fails,
+check that `VITE_API_URL` points to the API and that `CORS_ORIGINS` matches the
+browser's exact origin, including its hostname and port.
+
+| Response status | What to check |
+| --- | --- |
+| `paused` | Set `ASK_ENABLED=true` in the local API environment and restart it. |
+| `capacity` | Wait for the applicable quota window to reset. |
+| `error` | Check Redis connectivity, provider configuration, and the read-only database connection. |
+
+Seed a fresh local database once. Each run of `seed_data.py` inserts another
+batch, which changes the counts used to check the demo and evaluate queries.
+
 ### POST /api/ask
 
 Send JSON with a `question` string of up to 300 characters. A successful response has `status: "ok"`, `sql`, `explanation`, `columns`, `rows`, `row_count`, `truncated`, `latency_ms`, `model`, `tokens`, and `repaired`. Responses also identify the provider and model call count. The API can return `refuse` or `error` with a readable reason. Rate-limited requests return `capacity` with HTTP 429. The kill switch returns `paused` with HTTP 503.
