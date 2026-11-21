@@ -230,4 +230,4 @@ npm run storybook
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE) © 2026 Varun Singh · See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
