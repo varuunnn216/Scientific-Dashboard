@@ -17,7 +17,17 @@ const GRID_COLOR = '#27272a';
 const AXIS_COLOR = '#52525b';
 const TEXT_COLOR = '#d4d4d8';
 
-const PALETTE = ['#fafafa', '#d4d4d8', '#a1a1aa', '#71717a', '#e4e4e7', '#52525b', '#f4f4f5'];
+const MARKERS = new Map([
+  ['Antiviral', { color: '#82b0cd', shape: d3.symbolCircle }],
+  ['Kinase Inhibitor', { color: '#d4a25b', shape: d3.symbolSquare }],
+  ['Antibiotic', { color: '#77b5a2', shape: d3.symbolTriangle }],
+  ['Antifungal', { color: '#bd9bc8', shape: d3.symbolDiamond }],
+  ['Anticancer', { color: '#d69b83', shape: d3.symbolCross }],
+  ['Anti-inflammatory', { color: '#c8be78', shape: d3.symbolStar }],
+  ['CNS Agent', { color: '#a6a8d7', shape: d3.symbolWye }],
+]);
+const marker = (category: string) => MARKERS.get(category) ?? { color: '#d4d4d8', shape: d3.symbolCircle };
+const markerPath = (category: string, size: number) => d3.symbol(marker(category).shape, size)();
 
 export default function ScatterPlot({
   data,
@@ -33,11 +43,6 @@ export default function ScatterPlot({
   const categories = useMemo(
     () => Array.from(new Set(data.map((d) => d.category))).sort(),
     [data]
-  );
-
-  const colorScale = useMemo(
-    () => d3.scaleOrdinal<string>().domain(categories).range(PALETTE),
-    [categories]
   );
 
   const visibleData = useMemo(
@@ -140,24 +145,30 @@ export default function ScatterPlot({
       .style('opacity', 0)
       .style('box-shadow', '0 18px 34px rgba(0,0,0,0.55)');
 
-    g.selectAll('circle')
-      .data(visibleData, (d) => String((d as Compound).id))
-      .join('circle')
-      .attr('cx', (d) => xScale(d.molecular_weight))
-      .attr('cy', (d) => yScale(d.toxicity_score))
-      .attr('r', (d) => (d.id === selectedId ? 7 : 4.5))
-      .attr('fill', (d) => colorScale(d.category))
+    g.selectAll<SVGPathElement, Compound>('path.compound-marker')
+      .data(visibleData, (d) => String(d.id))
+      .join('path')
+      .attr('class', 'compound-marker')
+      .attr('data-category', (d) => d.category)
+      .attr('transform', (d) => `translate(${xScale(d.molecular_weight)},${yScale(d.toxicity_score)})`)
+      .attr('d', (d) => markerPath(d.category, d.id === selectedId ? 120 : 58))
+      .attr('fill', (d) => marker(d.category).color)
       .attr('stroke', (d) => (d.id === selectedId ? '#ffffff' : '#09090b'))
       .attr('stroke-width', (d) => (d.id === selectedId ? 2.5 : 1.2))
       .attr('opacity', 0.84)
       .style('cursor', 'pointer')
       .on('mouseover', function (_event, d) {
-        d3.select(this).attr('opacity', 1).attr('r', 7);
-        tooltip
-          .style('opacity', 1)
-          .html(
-            `<strong>${d.name}</strong><br/>Category: ${d.category}<br/>Weight: ${d.molecular_weight} g/mol<br/>Toxicity: ${d.toxicity_score}<br/>Affinity: ${d.binding_affinity} nM`
-          );
+        d3.select(this).attr('opacity', 1).attr('d', markerPath(d.category, 120));
+        tooltip.style('opacity', 1).text('');
+        tooltip.append('strong').text(d.name);
+        for (const detail of [
+          `Category: ${d.category}`,
+          `Weight: ${d.molecular_weight} g/mol`,
+          `Toxicity: ${d.toxicity_score}`,
+          `Affinity: ${d.binding_affinity} nM`,
+        ]) {
+          tooltip.append('div').text(detail);
+        }
       })
       .on('mousemove', (event) => {
         if (!containerRef.current) return;
@@ -169,11 +180,11 @@ export default function ScatterPlot({
       .on('mouseout', function (_, d) {
         d3.select(this)
           .attr('opacity', 0.84)
-          .attr('r', d.id === selectedId ? 7 : 4.5);
+          .attr('d', markerPath(d.category, d.id === selectedId ? 120 : 58));
         tooltip.style('opacity', 0);
       })
       .on('click', (_, d) => onPointClick?.(d));
-  }, [visibleData, selectedId, onPointClick, containerWidth, colorScale]);
+  }, [visibleData, selectedId, onPointClick, containerWidth]);
 
   const totalAvailable = totalCount ?? data.length;
 
@@ -191,11 +202,9 @@ export default function ScatterPlot({
                 aria-pressed={!isHidden}
                 onClick={() => toggleCategory(cat)}
               >
-                <span
-                  className={styles.legendSwatch}
-                  style={{ backgroundColor: colorScale(cat) }}
-                  aria-hidden="true"
-                />
+                <svg width="14" height="14" viewBox="-7 -7 14 14" aria-hidden="true">
+                  <path d={markerPath(cat, 58) ?? undefined} fill={marker(cat).color} />
+                </svg>
                 <span>{cat}</span>
               </button>
             );

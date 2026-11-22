@@ -3,6 +3,8 @@ import time
 
 import psycopg2
 from fastapi.encoders import jsonable_encoder
+from pglast import parse_sql
+from pglast.stream import IndentedStream
 
 from .db import execute
 from .prompt import REFUSAL_REASONS, messages
@@ -83,7 +85,7 @@ def ask(question, provider, execute_query=execute):
         try:
             columns, rows, truncated = execute_query(sql, probe)
             return response(
-                "ok", sql=sql, explanation=decision["explanation"], columns=columns,
+                "ok", sql=IndentedStream()(parse_sql(sql)), explanation=decision["explanation"], columns=columns,
                 rows=jsonable_encoder(rows), row_count=len(rows), truncated=truncated,
             )
         except psycopg2.Error as error:

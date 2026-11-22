@@ -73,8 +73,24 @@ browser's exact origin, including its hostname and port.
 | `capacity` | Wait for the applicable quota window to reset. |
 | `error` | Check Redis connectivity, provider configuration, and the read-only database connection. |
 
-Seed a fresh local database once. Each run of `seed_data.py` inserts another
-batch, which changes the counts used to check the demo and evaluate queries.
+The local fixture defines 250 compounds with stable names, generated values, and
+timestamps. `seed_data.py` inserts missing fixture names and preserves existing
+rows. Re-running it on a complete fixture inserts zero rows. For a clean eval,
+use a fresh disposable database. Existing duplicates are preserved for review.
+
+The audited local explorer and Ask databases each contained 250 unique names
+and IDs in one creation batch. The production read-only API returned 500 unique
+names and IDs in two batches of 250. Use 250 when describing the local fixture
+and 500 when describing the audited hosted dataset.
+
+#### Hosted Redis
+
+[Upstash Redis](https://upstash.com/pricing/redis) and
+[Redis Cloud](https://redis.io/pricing/) publish free plans for small workloads.
+Use a TLS-enabled Redis-protocol endpoint with Lua support for `ASK_REDIS_URL`.
+Check connection and command quotas before enabling Ask. If Redis is
+unavailable, the API returns a temporary-unavailability response without
+starting an unmetered query.
 
 ### POST /api/ask
 
@@ -86,12 +102,37 @@ Send JSON with a `question` string of up to 300 characters. A successful respons
 python -m pip install -r backend/requirements-dev.txt -r evals/requirements.txt
 (cd backend && python -m pytest)
 (cd frontend && npm ci && npm test && npm run lint && npm run build)
+python evals/run_chips.py
 python evals/run.py --verify-gold
 python evals/run.py --budget 40
 python evals/run.py --resume --budget 40
 ```
 
 Set `ASK_TEST_OWNER_DSN` to a **fresh disposable PostgreSQL instance** that allows the role test to log in as owner and reader. Set `ASK_TEST_REDIS_URL` for the Redis integration test. The eval reads `backend/.env`, uses `ASK_DATABASE_URL`, and calls the same query service with its own rate limiter. Use a seeded synthetic database. The daily case budget survives resuming, and the journal keeps infrastructure failures and their one retry. The evaluator bypasses the web cache for independent passes.
+
+The six example chips have separate regression cases in `evals/chips.jsonl`.
+The chip runner compares live results to independent hand-written SQL using the
+original strict scorer. The verified Groq run matched all six, with one trial
+per unique example. These examples are regression checks.
+
+To exercise the role integration test against a disposable native PostgreSQL
+instance, run the following on a host with Docker. The temporary container uses
+trust authentication and publishes its port only on loopback.
+
+```sh
+docker run --rm -d --name ask-role-test -p 127.0.0.1:55439:5432 \
+  -e POSTGRES_HOST_AUTH_METHOD=trust postgres:17
+docker exec ask-role-test pg_isready -U postgres
+(cd backend && ASK_TEST_OWNER_DSN=postgresql://postgres@127.0.0.1:55439/postgres \
+  python -m pytest tests/test_ask_integration.py::test_read_only_role)
+docker stop ask-role-test
+```
+
+The original baseline contains 40 unique cases and 120 trials. Dev has 13
+unique answerable questions × 3 passes = 39 trials, and held-out has 12 × 3 =
+36 trials. Each split contains five unique attack prompts × 3 passes = 15
+attack trials. These repeated trials describe a small, synthetic benchmark.
+Use the case denominators when quoting the results.
 
 Read the [evaluation report](evals/results/latest.md) for measured results and the frozen commit. The small, synthetic dataset and project-authored questions limit generalizability. Queries requiring joins or nested subqueries are outside the supported grammar. Quality and latency vary by provider and run.
 

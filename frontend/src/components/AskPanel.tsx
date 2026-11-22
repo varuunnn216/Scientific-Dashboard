@@ -77,6 +77,9 @@ function ResultChart({ result }: { result: Result }) {
 function QueryResult({ result }: { result: Result }) {
   const [sort, setSort] = useState<{ column: number; descending: boolean }>();
   const [copy, setCopy] = useState('');
+  const numericColumns = result.columns.map((_, index) =>
+    result.rows.some(row => typeof row[index] === 'number')
+    && result.rows.every(row => row[index] === null || typeof row[index] === 'number'));
   const rows = [...result.rows];
   if (sort) {
     rows.sort((left, right) => {
@@ -103,9 +106,10 @@ function QueryResult({ result }: { result: Result }) {
       </div>
       <p className={styles.muted} role="status">{copy}</p>
       <pre tabIndex={0}><code>{result.sql}</code></pre>
-      <h3>What the query does</h3>
-      <p>{result.explanation}</p>
-      <p className={styles.muted}>The AI explanation describes the query only.</p>
+      <div className={styles.explanation}>
+        <h3>What the query does</h3>
+        <p>{result.explanation}</p>
+      </div>
       <ResultChart result={result} />
       <div className={styles.line}>
         <h2>Results</h2>
@@ -115,7 +119,7 @@ function QueryResult({ result }: { result: Result }) {
       <div className={styles.table} role="region" aria-label="Query results table" tabIndex={0}>
         <table>
           <thead><tr>{result.columns.map((column, index) => (
-            <th key={index} scope="col" aria-sort={sort?.column === index
+            <th key={index} scope="col" className={numericColumns[index] ? styles.numeric : undefined} aria-sort={sort?.column === index
               ? sort.descending ? 'descending' : 'ascending' : undefined}>
               <button type="button" onClick={() => setSort({
                 column: index, descending: sort?.column === index && !sort.descending,
@@ -125,12 +129,12 @@ function QueryResult({ result }: { result: Result }) {
             </th>
           ))}</tr></thead>
           <tbody>{rows.map((row, index) => (
-            <tr key={index}>{row.map((cell, i) => <td key={i}>{cell === null ? '—' : String(cell)}</td>)}</tr>
+            <tr key={index}>{row.map((cell, i) => <td key={i} className={numericColumns[i] ? styles.numeric : undefined}>{cell === null ? '—' : String(cell)}</td>)}</tr>
           ))}</tbody>
         </table>
       </div>
       {rows.length === 0 && <p>No rows matched this query.</p>}
-      <p className={styles.muted}>{result.cached ? 'Cached result' : `${result.latency_ms} ms`}{result.model && ` · ${result.model}`}</p>
+      <p className={styles.muted}>{result.cached ? `Cached · original ${result.latency_ms} ms` : `${result.latency_ms} ms`}{result.model && ` · ${result.model}`}</p>
     </section>
   );
 }

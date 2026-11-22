@@ -12,6 +12,7 @@ frontend/dist/
 .DS_Store
 Thumbs.db
 
+evals/__pycache__/
 evals/results/progress.jsonl
 evals/results/run-config.json
 evals/results/latest.tmp

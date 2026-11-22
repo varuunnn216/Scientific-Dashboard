@@ -7,7 +7,7 @@ vi.mock('../api/compounds', () => ({ default: { post: vi.fn() } }));
 
 const success = {
   status: 'ok',
-  sql: 'SELECT category, count(*) FROM public.compounds GROUP BY category',
+  sql: 'SELECT category, count(*)\nFROM ONLY public.compounds\nGROUP BY category',
   explanation: 'Counts compounds by category.',
   columns: ['category', 'count'],
   rows: [['Antiviral', 40], ['Anticancer', 36]],
@@ -34,13 +34,30 @@ describe('Ask the Data', () => {
     expect(screen.getByRole('button', { name: 'Running…' })).toBeDisabled();
     expect(screen.getByRole('status')).toHaveTextContent('Generating');
     await act(async () => resolve({ data: success }));
-    expect(screen.getByText(success.sql)).toBeVisible();
+    expect(screen.getByText(/FROM ONLY public.compounds/)).toHaveTextContent('GROUP BY category');
     expect(screen.getByText('Showing 2 rows')).toBeVisible();
     expect(screen.getByRole('region', { name: 'Bar chart' })).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: 'count' }));
     const table = screen.getByRole('table');
     expect(within(table).getAllByRole('row')[1]).toHaveTextContent('Anticancer');
     expect(screen.getByRole('columnheader', { name: 'count' })).toHaveAttribute('aria-sort', 'ascending');
+  });
+
+  it('copies the formatted SQL and displays model and latency together', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    const previous = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+    try {
+      vi.mocked(api.post).mockResolvedValue({ data: success });
+      submit();
+      fireEvent.click(await screen.findByRole('button', { name: 'Copy SQL' }));
+      expect(writeText).toHaveBeenCalledWith(success.sql);
+      expect(await screen.findByText('Copied')).toBeVisible();
+      expect(screen.getByText('120 ms · fixture-model')).toBeVisible();
+    } finally {
+      if (previous) Object.defineProperty(navigator, 'clipboard', previous);
+      else Reflect.deleteProperty(navigator, 'clipboard');
+    }
   });
 
   it('renders a friendly refusal', async () => {
