@@ -4,6 +4,8 @@ import { scaleLinear } from 'd3';
 import axios from 'axios';
 import api from '../api/compounds';
 import styles from './AskPanel.module.css';
+import BlurText from './reactbits/BlurText';
+import MotionField from './reactbits/MotionField';
 import dashboard from './Dashboard.module.css';
 
 const examples = [
@@ -172,8 +174,11 @@ export default function AskPanel() {
       <div className={styles.layout}>
         <nav aria-label="Dashboard"><a href="#">← Compound explorer</a></nav>
         <section className={styles.card}>
-          <h1>Ask the Data</h1>
-          <p className={styles.muted}>Demo on a synthetic dataset. The AI can be wrong: check the SQL.</p>
+          <header className={styles.askHeader}>
+            <MotionField className={styles.askMotion} />
+            <h1><BlurText text="Ask the Data" /></h1>
+            <p className={styles.muted}>Ask about the synthetic compounds. Review the generated SQL before relying on the answer.</p>
+          </header>
           <form onSubmit={run} className={styles.form}>
             <label htmlFor="ask-question">Your question</label>
             <div className={styles.controls}>

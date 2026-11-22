@@ -14,10 +14,8 @@ import CountUp from './CountUp';
 import SpotlightCard from './reactbits/SpotlightCard';
 import BlurText from './reactbits/BlurText';
 import AnimatedContent from './reactbits/AnimatedContent';
-import ShinyText from './reactbits/ShinyText';
-import ParticlesBg from './reactbits/ParticlesBg';
+import MotionField from './reactbits/MotionField';
 import Magnet from './reactbits/Magnet';
-import askStyles from './AskPanel.module.css';
 import styles from './Dashboard.module.css';
 
 const PAGE_SIZE = 25;
@@ -308,35 +306,18 @@ export default function Dashboard() {
 
   return (
     <main className={styles.shell}>
-      <ParticlesBg />
       <AnimatedContent delayMs={0}>
         <section className={styles.hero}>
           <div className={styles.heroCopy}>
-            <div className={styles.heroMeta}>
-              <span className={styles.eyebrow}>Compound intelligence dashboard</span>
-              <span className={styles.demoBadge}>
-                <ShinyText text="Synthetic demo data" />
-              </span>
+            <div className={styles.heroLabels}>
+              <span className={styles.heroIdentity}>Scientific Compound Data Explorer</span>
+              <span className={styles.dataLabel}>Synthetic demo data</span>
             </div>
-            <h1>
-              <BlurText text="Scientific Compound Data Explorer" delayMs={45} />
-            </h1>
-            <p>
-              Explore molecular properties, toxicity bands, and binding affinity patterns across
-              the compound library.
-            </p>
-            <a className={askStyles.entry} href="#ask">Ask the Data →</a>
+            <h1><BlurText text="Explore the compound library" /></h1>
+            <p>Compare molecular weight, solubility, toxicity, and binding affinity across the library.</p>
+            <a className={styles.askLink} href="#ask">Ask the Data <span aria-hidden="true">↗</span></a>
           </div>
-
-          <div className={styles.heroVisual} aria-hidden="true">
-            <div className={styles.molecule}>
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-            </div>
-          </div>
+          <MotionField className={styles.heroVisual} />
         </section>
       </AnimatedContent>
 

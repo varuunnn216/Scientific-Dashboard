@@ -264,3 +264,42 @@
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
+
+.askHeader {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  gap: 8px;
+  padding: clamp(16px, 4vw, 36px);
+  min-height: 130px;
+  align-content: center;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #111311;
+}
+
+.askHeader p {
+  max-width: 42ch;
+  color: #d4dad4;
+  text-wrap: pretty;
+}
+
+.askHeader .askMotion {
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 0 36%;
+  mask-image: linear-gradient(to right, transparent, #000 75%);
+}
+
+.card .run {
+  background: #d1f4ad;
+  color: #141911;
+}
+
+.card .run:hover:not(:disabled) {
+  background: #e4ffcc;
+}
+
+.barRow svg {
+  fill: #b7cf9e;
+}
