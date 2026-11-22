@@ -12,3 +12,11 @@ GRANT SELECT (
     id, name, molecular_formula, molecular_weight, solubility, toxicity_score,
     binding_affinity, category, created_at
 ) ON TABLE public.compounds TO ask_reader;
+
+-- A read-only transaction alone still permits some operations on temporary
+-- tables. Remove implicit database TEMP access in this isolated database.
+DO $$
+BEGIN
+    EXECUTE format('REVOKE TEMPORARY ON DATABASE %I FROM PUBLIC, ask_reader', current_database());
+END
+$$;

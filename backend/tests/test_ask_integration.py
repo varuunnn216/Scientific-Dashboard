@@ -38,11 +38,24 @@ def test_read_only_role(monkeypatch):
     with closing(psycopg2.connect(reader_dsn)) as reader:
         reader.autocommit = True
         with reader.cursor() as cursor:
+            cursor.execute("SHOW search_path")
+            assert cursor.fetchone() == ("pg_catalog",)
+            cursor.execute("""
+                SELECT id, name, molecular_formula, molecular_weight, solubility,
+                    toxicity_score, binding_affinity, category, created_at
+                FROM public.compounds
+            """)
+            assert cursor.fetchone()[:3] == (1, "CMP-0001", "C1H2")
             cursor.execute("SHOW default_transaction_read_only")
             assert cursor.fetchone() == ("on",)
             cursor.execute("SET default_transaction_read_only = off")
             denied_sql = (
                 "INSERT INTO public.compounds (id) VALUES (2)",
+                "UPDATE public.compounds SET name = 'changed'",
+                "DELETE FROM public.compounds",
+                "CREATE TABLE public.reader_created (id integer)",
+                "CREATE SCHEMA reader_created",
+                "CREATE TEMP TABLE reader_created (id integer)",
                 "SELECT * FROM public.private_fixture",
                 "SELECT future_private_column FROM public.compounds",
                 "SELECT * FROM public.compounds",

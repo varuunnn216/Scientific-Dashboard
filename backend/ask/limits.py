@@ -59,7 +59,7 @@ class Limits:
         return self.client.eval(CONSUME, len(keys), *keys, minute_cap, 120, ip_cap, 172800, global_cap, 172800)
 
     def cache_key(self, question):
-        return self.prefix + "result:v1:" + hashlib.sha256(question.encode()).hexdigest()
+        return self.prefix + "result:v2:" + hashlib.sha256(question.encode()).hexdigest()
 
     def cached(self, question):
         return self.client.get(self.cache_key(question))
