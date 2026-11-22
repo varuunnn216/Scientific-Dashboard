@@ -48,13 +48,17 @@ function ResultChart({ result }: { result: Result }) {
   const numericIndex = 1 - categoryIndex;
   if (!result.rows.every(row => typeof row[categoryIndex] === 'string'
     && typeof row[numericIndex] === 'number' && Number.isFinite(row[numericIndex]))) return null;
+  const metric = result.columns[numericIndex].replaceAll('_', ' ').toLowerCase();
+  const subject = result.columns[categoryIndex].replaceAll('_', ' ').toLowerCase();
+  const title = `${metric.charAt(0).toUpperCase()}${metric.slice(1)} by ${subject === 'name' ? 'compound' : subject}`;
+  const isBindingAffinity = result.columns[numericIndex].toLowerCase() === 'binding_affinity';
   const values = result.rows.map(row => Number(row[numericIndex]));
   const min = Math.min(0, ...values);
   const max = Math.max(0, ...values);
   const x = scaleLinear().domain([min, max || (min === 0 ? 1 : 0)]).range([0, 100]);
   return (
     <section className={styles.chart}>
-      <h3>{result.columns[numericIndex].replaceAll('_', ' ')} by {result.columns[categoryIndex].replaceAll('_', ' ')}</h3>
+      <h3>{title}</h3>
       <div className={styles.bars} role="region" aria-label="Bar chart" tabIndex={0}>
         {result.rows.map((row, index) => {
           const value = values[index];
@@ -70,6 +74,7 @@ function ResultChart({ result }: { result: Result }) {
           );
         })}
       </div>
+      {isBindingAffinity && <p className={styles.muted}>Lower is stronger</p>}
     </section>
   );
 }

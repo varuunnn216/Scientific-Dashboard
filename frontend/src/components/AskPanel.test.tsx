@@ -37,6 +37,8 @@ describe('Ask the Data', () => {
     expect(screen.getByText(/FROM ONLY public.compounds/)).toHaveTextContent('GROUP BY category');
     expect(screen.getByText('Showing 2 rows')).toBeVisible();
     expect(screen.getByRole('region', { name: 'Bar chart' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Count by category' })).toBeVisible();
+    expect(screen.queryByText('Lower is stronger')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'count' }));
     const table = screen.getByRole('table');
     expect(within(table).getAllByRole('row')[1]).toHaveTextContent('Anticancer');
@@ -58,6 +60,15 @@ describe('Ask the Data', () => {
       if (previous) Object.defineProperty(navigator, 'clipboard', previous);
       else Reflect.deleteProperty(navigator, 'clipboard');
     }
+  });
+
+  it('labels binding affinity in sentence case and explains the direction', async () => {
+    vi.mocked(api.post).mockResolvedValue({
+      data: { ...success, columns: ['name', 'binding_affinity'] },
+    });
+    submit();
+    expect(await screen.findByRole('heading', { name: 'Binding affinity by compound' })).toBeVisible();
+    expect(screen.getByText('Lower is stronger')).toBeVisible();
   });
 
   it('renders a friendly refusal', async () => {
