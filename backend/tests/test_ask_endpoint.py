@@ -8,7 +8,7 @@ from pglast.stream import RawStream
 from redis.exceptions import ConnectionError
 import pytest
 
-from ask import routes, service
+from ask import runtime as routes, service
 from ask.providers import Provider, ProviderSession
 from main import app
 

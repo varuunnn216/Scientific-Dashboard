@@ -64,7 +64,7 @@ function escapeCsvCell(value: string | number): string {
   return str;
 }
 
-export default function Dashboard() {
+export default function Dashboard({ askEnabled = false }: { askEnabled?: boolean }) {
   const [compounds, setCompounds] = useState<Compound[]>([]);
   const [apiTotal, setApiTotal] = useState<number>(0);
   const [categories, setCategories] = useState<string[]>([]);
@@ -289,7 +289,7 @@ export default function Dashboard() {
             </div>
             <h1><BlurText text="Explore the compound library" /></h1>
             <p>Compare molecular weight, solubility, toxicity, and binding affinity across the library.</p>
-            <a className={styles.askLink} href="#ask">Ask the Data <span aria-hidden="true">↗</span></a>
+            {askEnabled && <a className={styles.askLink} href="#ask">Ask the Data <span aria-hidden="true">↗</span></a>}
           </div>
           <MotionField className={styles.heroVisual} />
         </section>
