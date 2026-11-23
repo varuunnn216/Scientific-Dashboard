@@ -106,7 +106,8 @@
 }
 
 .controls textarea::placeholder {
-  color: #a1a1aa;
+  color: #b5b5bd;
+  opacity: 1;
 }
 
 .card button {
@@ -302,4 +303,11 @@
 
 .barRow svg {
   fill: #b7cf9e;
+}
+
+.card .run:disabled {
+  opacity: 1;
+  background: #343b30;
+  border-color: #879381;
+  color: #d5dfd2;
 }

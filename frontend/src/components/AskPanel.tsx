@@ -81,6 +81,24 @@ function ResultChart({ result }: { result: Result }) {
   );
 }
 
+const numberFormat = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
+
+function exportResult(columns: string[], rows: Cell[][]) {
+  const csv = [columns, ...rows].map(row => row.map(cell => {
+    if (cell === null) return '';
+    if (typeof cell !== 'string') return String(cell);
+    // Protect cells starting with spreadsheet formula characters.
+    const safe = /^[\s]*[=+@-]|^[\t\r\n]/.test(cell) ? "'" + cell : cell;
+    return `"${safe.replaceAll('"', '""')}"`;
+  }).join(',')).join('\r\n');
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'ask-results.csv';
+  link.click();
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
 function QueryResult({ result }: { result: Result }) {
   const [sort, setSort] = useState<{ column: number; descending: boolean }>();
   const [copy, setCopy] = useState('');
@@ -120,8 +138,9 @@ function QueryResult({ result }: { result: Result }) {
       <ResultChart result={result} />
       <div className={styles.line}>
         <h2>Results</h2>
-        <p>Showing {result.row_count} {result.row_count === 1 ? 'row' : 'rows'}</p>
+        <button type="button" disabled={!rows.length} onClick={() => exportResult(result.columns, rows)}>Export CSV</button>
       </div>
+      <p>Showing {result.row_count} {result.row_count === 1 ? 'row' : 'rows'}</p>
       {result.truncated && <p className={styles.muted}>Results truncated to 200 rows.</p>}
       <div className={styles.table} role="region" aria-label="Query results table" tabIndex={0}>
         <table>
@@ -136,7 +155,9 @@ function QueryResult({ result }: { result: Result }) {
             </th>
           ))}</tr></thead>
           <tbody>{rows.map((row, index) => (
-            <tr key={index}>{row.map((cell, i) => <td key={i} className={numericColumns[i] ? styles.numeric : undefined}>{cell === null ? '—' : String(cell)}</td>)}</tr>
+            <tr key={index}>{row.map((cell, i) => <td key={i} className={numericColumns[i] ? styles.numeric : undefined} title={typeof cell === 'number' ? String(cell) : undefined}>
+              {cell === null ? '—' : typeof cell === 'number' ? numberFormat.format(cell) : String(cell)}
+            </td>)}</tr>
           ))}</tbody>
         </table>
       </div>

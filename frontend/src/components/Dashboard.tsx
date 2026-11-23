@@ -1,8 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { getCompounds, getStats, getCategories } from '../api/compounds';
+import { getCompounds, getCategories } from '../api/compounds';
 import type {
   Compound,
-  StatsResponse,
   CompoundFilters,
   CategoryStat,
   MolecularWeightBucket,
@@ -68,7 +67,6 @@ function escapeCsvCell(value: string | number): string {
 export default function Dashboard() {
   const [compounds, setCompounds] = useState<Compound[]>([]);
   const [apiTotal, setApiTotal] = useState<number>(0);
-  const [stats, setStats] = useState<StatsResponse | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
 
   const [categoryFilter, setCategoryFilter] = useState<string>('');
@@ -136,13 +134,9 @@ export default function Dashboard() {
     }, 3000);
 
     try {
-      const [compoundsRes, statsRes] = await Promise.all([
-        getCompounds(filters),
-        getStats(),
-      ]);
+      const compoundsRes = await getCompounds(filters);
       setCompounds(compoundsRes.results);
       setApiTotal(compoundsRes.total);
-      setStats(statsRes);
     } catch (err) {
       setError(
         'Unable to reach the compound data service. Please check your connection or try again.'
@@ -163,11 +157,10 @@ export default function Dashboard() {
     getCategories().then(setCategories).catch(console.error);
   }, []);
 
-  const hasApiFilters = Boolean(
-    filters.category || filters.min_weight !== undefined || filters.max_weight !== undefined
-  );
   const trimmedSearch = searchQuery.trim().toLowerCase();
-  const hasAnyFilter = hasApiFilters || trimmedSearch.length > 0;
+  const sampleLimited = compounds.length < apiTotal;
+  const hasAnyFilter = Boolean(trimmedSearch || filters.category
+    || filters.min_weight !== undefined || filters.max_weight !== undefined);
 
   const filteredCompounds = useMemo(() => {
     if (!trimmedSearch) return compounds;
@@ -204,15 +197,7 @@ export default function Dashboard() {
 
   const selectedCompound = compounds.find((c) => c.id === selectedId) ?? null;
 
-  const kpiTotalCompounds = trimmedSearch
-    ? filteredCompounds.length
-    : hasApiFilters
-      ? apiTotal
-      : stats?.total_compounds ?? apiTotal;
-
-  const kpiCategoriesCount = hasAnyFilter
-    ? new Set(filteredCompounds.map((c) => c.category)).size
-    : stats?.categories.length ?? categories.length;
+  const kpiCategoriesCount = new Set(filteredCompounds.map((c) => c.category)).size;
 
   const avgToxicity = filteredCompounds.length
     ? filteredCompounds.reduce((sum, c) => sum + c.toxicity_score, 0) / filteredCompounds.length
@@ -222,19 +207,8 @@ export default function Dashboard() {
     ? Math.min(...filteredCompounds.map((c) => c.binding_affinity))
     : 0;
 
-  const barChartData = useMemo(() => {
-    if (hasAnyFilter) {
-      return computeCategoryStats(filteredCompounds);
-    }
-    return stats?.categories ?? [];
-  }, [hasAnyFilter, filteredCompounds, stats]);
-
-  const histogramData = useMemo(() => {
-    if (hasAnyFilter) {
-      return computeWeightBuckets(filteredCompounds);
-    }
-    return stats?.molecular_weight_distribution ?? [];
-  }, [hasAnyFilter, filteredCompounds, stats]);
+  const barChartData = useMemo(() => computeCategoryStats(filteredCompounds), [filteredCompounds]);
+  const histogramData = useMemo(() => computeWeightBuckets(filteredCompounds), [filteredCompounds]);
 
   const handleSort = (field: SortField) => {
     if (sortBy === field) {
@@ -348,10 +322,11 @@ export default function Dashboard() {
         <section className={styles.statsGrid} aria-label="Dashboard summary">
           <AnimatedContent delayMs={40}>
             <SpotlightCard as="article" className={styles.metric}>
-              <span>Total compounds</span>
+              <span>{sampleLimited ? 'Compounds in sample' : 'Compounds'}</span>
               <strong>
-                <CountUp value={kpiTotalCompounds} />
+                <CountUp value={filteredCompounds.length} />
               </strong>
+              {sampleLimited && <small className={styles.coverage}>Showing {compounds.length} of {apiTotal} matching compounds</small>}
             </SpotlightCard>
           </AnimatedContent>
           <AnimatedContent delayMs={90}>
@@ -576,6 +551,9 @@ export default function Dashboard() {
                     ? 'Showing 0 of 0'
                     : `Showing ${showingFrom}-${showingTo} of ${totalTableRows}`}
                 </h2>
+                {sampleLimited && (
+                  <p className={styles.coverage}>Table, charts and metrics use the same sample of {compounds.length} out of {apiTotal} matches.{trimmedSearch && ' ID search applies within this sample.'}</p>
+                )}
               </div>
 
               <button

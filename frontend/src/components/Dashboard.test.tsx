@@ -57,6 +57,16 @@ describe('Dashboard', () => {
     expect(screen.getByText('Synthetic demo data')).toBeInTheDocument();
   });
 
+  it('labels sampled rows and the API total separately', async () => {
+    vi.mocked(getCompounds).mockResolvedValue({
+      total: 250, page: 1, page_size: 100, results: makeCompounds(100),
+    });
+    render(<Dashboard />);
+    expect(await screen.findByText('Compounds in sample')).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Showing 1-25 of 100' })).toBeVisible();
+    expect(screen.getByText(/same sample of 100 out of 250 matches/)).toBeVisible();
+  });
+
   it('supports table sorting on columns and pagination at 25 rows per page', async () => {
     const items = makeCompounds(30);
     vi.mocked(getCompounds).mockResolvedValue({

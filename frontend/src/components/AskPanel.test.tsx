@@ -62,6 +62,19 @@ describe('Ask the Data', () => {
     }
   });
 
+  it('rounds displayed values and sorts by their original precision', async () => {
+    vi.mocked(api.post).mockResolvedValue({
+      data: { ...success, rows: [['Antiviral', 1234.124], ['Anticancer', 1234.121]] },
+    });
+    submit();
+    const table = await screen.findByRole('table');
+    expect(within(table).getAllByText('1,234.12')).toHaveLength(2);
+    fireEvent.click(within(table).getByRole('button', { name: 'count' }));
+    const first = within(table).getAllByRole('row')[1];
+    expect(first).toHaveTextContent('Anticancer');
+    expect(within(first).getByText('1,234.12')).toHaveAttribute('title', '1234.121');
+  });
+
   it('labels binding affinity in sentence case and explains the direction', async () => {
     vi.mocked(api.post).mockResolvedValue({
       data: { ...success, columns: ['name', 'binding_affinity'] },
