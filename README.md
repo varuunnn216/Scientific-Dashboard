@@ -22,7 +22,15 @@ The Scientific Compound Data Explorer lets users filter compounds by category, m
 
 ## Ask the Data
 
-Ask a question about the synthetic compound library and inspect the generated SQL, executed results, and query explanation.
+Ask the Data is built and tested, and it is paused on the public dashboard.
+The explorer remains available. The browser hides the Ask entry point while
+paused and shows a paused card on the direct `/#ask` route.
+`GET /api/ask/status` reports availability, and `POST /api/ask` returns HTTP 503
+when paused. The paused API leaves Ask's Redis, database and provider runtime
+unloaded.
+
+When enabled, Ask accepts a question about the synthetic compound library
+and shows the generated SQL, results, and query explanation.
 
 ![Ask the Data showing a grouped query, bar chart, and results](docs/ask-the-data.png)
 
@@ -38,6 +46,21 @@ flowchart LR
 ```
 
 The provider receives the question and the synthetic schema. Repair requests include a sanitized error hint. Result rows stay between PostgreSQL and the API. Each question has a shared budget of two provider calls, including retries, failover, and repair. PostgreSQL's parser handles comments and statement boundaries before an AST allowlist checks the query shape, relations, columns, and functions. It supports one SELECT, optionally with one bounded, nonrecursive CTE, and caps the response at 200 rows. A one-row probe detects truncation when the service supplies the cap. See [SECURITY.md](SECURITY.md).
+
+### Enable in a future release
+
+Configure `ASK_DATABASE_URL` for the isolated column-scoped reader,
+`ASK_REDIS_URL` for TLS Redis, `GROQ_API_KEY` for the provider, and
+`CORS_ORIGINS` for the exact frontend origin. Keep `ASK_ENABLED` paused while
+verifying the infrastructure, then enable it only for the approved target.
+See the [deployment runbook](docs/ask-deployment-runbook.md).
+
+The original strict baseline matched **33 of 39 dev answerable trials** and
+**30 of 36 held-out answerable trials**. Dev used 13 unique answerable questions
+and held-out used 12, each repeated across three passes. Dev and held-out each
+blocked **15 of 15 attack trials**, from five unique attack prompts repeated
+across three passes per split. The small synthetic dataset and repeated prompts
+limit how broadly these results apply.
 
 ### Provider configuration
 
