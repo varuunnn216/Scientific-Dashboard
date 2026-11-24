@@ -7,7 +7,7 @@ vi.mock('../api/compounds', () => ({ default: { post: vi.fn() } }));
 
 const success = {
   status: 'ok',
-  sql: 'SELECT category, count(*) FROM public.compounds GROUP BY category',
+  sql: 'SELECT category, count(*)\nFROM ONLY public.compounds\nGROUP BY category',
   explanation: 'Counts compounds by category.',
   columns: ['category', 'count'],
   rows: [['Antiviral', 40], ['Anticancer', 36]],
@@ -34,13 +34,54 @@ describe('Ask the Data', () => {
     expect(screen.getByRole('button', { name: 'Running…' })).toBeDisabled();
     expect(screen.getByRole('status')).toHaveTextContent('Generating');
     await act(async () => resolve({ data: success }));
-    expect(screen.getByText(success.sql)).toBeVisible();
+    expect(screen.getByText(/FROM ONLY public.compounds/)).toHaveTextContent('GROUP BY category');
     expect(screen.getByText('Showing 2 rows')).toBeVisible();
     expect(screen.getByRole('region', { name: 'Bar chart' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Count by category' })).toBeVisible();
+    expect(screen.queryByText('Lower is stronger')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'count' }));
     const table = screen.getByRole('table');
     expect(within(table).getAllByRole('row')[1]).toHaveTextContent('Anticancer');
     expect(screen.getByRole('columnheader', { name: 'count' })).toHaveAttribute('aria-sort', 'ascending');
+  });
+
+  it('copies the formatted SQL and displays model and latency together', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    const previous = Object.getOwnPropertyDescriptor(navigator, 'clipboard');
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+    try {
+      vi.mocked(api.post).mockResolvedValue({ data: success });
+      submit();
+      fireEvent.click(await screen.findByRole('button', { name: 'Copy SQL' }));
+      expect(writeText).toHaveBeenCalledWith(success.sql);
+      expect(await screen.findByText('Copied')).toBeVisible();
+      expect(screen.getByText('120 ms · fixture-model')).toBeVisible();
+    } finally {
+      if (previous) Object.defineProperty(navigator, 'clipboard', previous);
+      else Reflect.deleteProperty(navigator, 'clipboard');
+    }
+  });
+
+  it('rounds displayed values and sorts by their original precision', async () => {
+    vi.mocked(api.post).mockResolvedValue({
+      data: { ...success, rows: [['Antiviral', 1234.124], ['Anticancer', 1234.121]] },
+    });
+    submit();
+    const table = await screen.findByRole('table');
+    expect(within(table).getAllByText('1,234.12')).toHaveLength(2);
+    fireEvent.click(within(table).getByRole('button', { name: 'count' }));
+    const first = within(table).getAllByRole('row')[1];
+    expect(first).toHaveTextContent('Anticancer');
+    expect(within(first).getByText('1,234.12')).toHaveAttribute('title', '1234.121');
+  });
+
+  it('labels binding affinity in sentence case and explains the direction', async () => {
+    vi.mocked(api.post).mockResolvedValue({
+      data: { ...success, columns: ['name', 'binding_affinity'] },
+    });
+    submit();
+    expect(await screen.findByRole('heading', { name: 'Binding affinity by compound' })).toBeVisible();
+    expect(screen.getByText('Lower is stronger')).toBeVisible();
   });
 
   it('renders a friendly refusal', async () => {

@@ -3,9 +3,12 @@ import json
 from fastapi.testclient import TestClient
 import httpx
 import psycopg2
+from pglast import parse_sql
+from pglast.stream import RawStream
+from redis.exceptions import ConnectionError
 import pytest
 
-from ask import routes, service
+from ask import runtime as routes, service
 from ask.providers import Provider, ProviderSession
 from main import app
 
@@ -81,7 +84,8 @@ def test_success_and_cache(setup):
     assert response["status"] == "ok"
     assert response["rows"] == [[142857]] and response["row_count"] == 1 and not response["truncated"]
     assert response["model_calls"] == 1 and response["tokens"] == 80 and not response["repaired"]
-    assert response["sql"] == executed[0][0]
+    assert "\nFROM ONLY public.compounds" in response["sql"]
+    assert RawStream()(parse_sql(response["sql"])) == executed[0][0]
     assert send(client).json()["cached"] is True
     assert len(sent) == len(executed) == 1
     assert limits.addresses == ["unknown", "unknown"]
@@ -191,3 +195,18 @@ def test_cors(setup):
     allowed = client.options("/api/ask", headers=dict(headers, Origin="https://scientific-dashboard-ui.vercel.app"))
     assert "access-control-allow-origin" not in denied.headers
     assert allowed.headers["access-control-allow-origin"] == "https://scientific-dashboard-ui.vercel.app"
+
+
+
+@pytest.mark.parametrize("operation", ["allow", "cached"])
+def test_redis_outage_fails_closed(setup, monkeypatch, operation):
+    client, limits, sent, _, executed = setup
+
+    def redis_unavailable(*_args):
+        raise ConnectionError("private Redis endpoint")
+
+    monkeypatch.setattr(limits, operation, redis_unavailable)
+    response = send(client)
+    assert response.status_code == 503
+    assert response.json() == {"status": "error", "reason": service.UNAVAILABLE}
+    assert not sent and not executed

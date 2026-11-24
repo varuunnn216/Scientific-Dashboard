@@ -1,0 +1,34 @@
+.field {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 14px;
+  background:
+    radial-gradient(ellipse at 67% 46%, #b5d9a01c, transparent 58%),
+    radial-gradient(circle, #a5ada236 1px, transparent 1.5px) center / 16px 16px,
+    #101311;
+}
+
+.field > :first-child:not(.sweep) {
+  position: absolute;
+  inset: 0;
+}
+
+.sweep {
+  position: absolute;
+  inset: -35%;
+  background: linear-gradient(112deg, transparent 36%, #bfe89926 50%, transparent 64%);
+  pointer-events: none;
+  animation: sweep 8s ease-in-out infinite alternate;
+}
+
+@keyframes sweep {
+  from { transform: translateX(-26%) rotate(-10deg); }
+  to { transform: translateX(26%) rotate(10deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sweep {
+    animation: none;
+  }
+}
