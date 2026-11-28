@@ -14,6 +14,8 @@ Interactive full-stack dashboard for filtering, analyzing, and visualizing synth
 ![D3](https://img.shields.io/badge/D3.js-7-f9a03c)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green)
 
+[Local setup](#running-locally) · [API endpoints](#api-endpoints) · [Tests and Storybook](#running-tests-lint-and-storybook)
+
 ## Overview
 
 The Scientific Compound Data Explorer lets users filter compounds by category, molecular weight range, and ID, inspect summary KPIs, explore three responsive D3 visualizations, sort and paginate through compound records, and export filtered results to CSV.
